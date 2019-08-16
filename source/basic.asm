@@ -9,15 +9,19 @@
 ; *******************************************************************************************
 ; *******************************************************************************************
 
-		.as	
+		.if 		CPU=="65C02"
+		.cpu 		"65c02"
+		.endif
+
+		.if 		CPU=="65816"
+		.cpu 		"65816"
+		.as
 		.xs
+		.endif
 
 		* = $0000
 		nop
 		.include 	"data.asm"
-
-		* = $8000
-		.text 		"Hello, tim !"
 
 		* = $A000
 		.include 	"utility/tim.asm"
@@ -36,10 +40,16 @@
 		.include 	"float/fptostr.asm"
 
 		* = $E000
+		.if 		CPU=="65C02"
+		.include 	"interface/interface_6502.asm"
+		.endif
+		.if 		CPU=="65816"
 		.include 	"interface/interface_65816.asm"
+		.endif
 		.include 	"interface/interface_tools.asm"
 
 StartROM:
+		.if 		CPU=="65816"
 		clc
 		xce	
 		rep 	#$30
@@ -51,18 +61,17 @@ StartROM:
 		tay
 		.as
 		sep 	#$30
-		
-;		ldx 		#$FF 					; empty stack
-;		txs
+		.endif
+
+		.if 		CPU=="65C02"
+		ldx 		#$FF 					; empty stack
+		txs
+		.endif
 
 		jsr 	IF_Reset 					; reset external interface
 		jsr 	IFT_ClearScreen
 ;		jmp 	TIM_Start
 		jsr 	FPTTest
-		lda 	#0
-		sta 	NumBufX
-		ldx 	#6
-		jsr 	FPToString
 		.byte 	$02
 freeze:	bra 	freeze		
 
@@ -78,4 +87,3 @@ NMIHandler:
 		.word	NMIHandler
 		.word 	StartROM
 		.word 	TIM_BreakVector
-

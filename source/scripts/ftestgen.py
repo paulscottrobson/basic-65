@@ -13,7 +13,7 @@ import random,sys
 from fscript import *
 
 class FPTest(object):
-	def __init__(self,seed = random.randint(0,999999)):
+	def __init__(self,handle,seed = random.randint(0,999999)):
 		random.seed(seed)
 		print("; Using seed {0}".format(seed))
 		self.target = FScriptCompiler(sys.stdout)
@@ -71,7 +71,7 @@ class FPTest(object):
 		return -1 if random.randint(0,1) == 0 else 1
 
 if __name__ == "__main__":
-	test = FPTest()
+	test = FPTest(sys.stdout)
 	#test.setOperators("-")
 	for i in range(0,200):
 		test.generateTest(i)

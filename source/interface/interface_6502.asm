@@ -1,8 +1,8 @@
 ; *******************************************************************************************
 ; *******************************************************************************************
 ;
-;		Name : 		interface_65816.asm
-;		Purpose :	Assembler Interface (65816 version)
+;		Name : 		interface_6502.asm
+;		Purpose :	Assembler Interface (6502 version)
 ;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
@@ -35,16 +35,16 @@ IF_Reset:
 ; *******************************************************************************************
 
 IF_Home:
-		pha
-		stz 	IF_XPos 					; zero X position	
-		lda 	#IF_Screen & $FF 			; set r/w pos.
-		sta 	IF_Pos
-		lda 	#(IF_Screen >> 8) & $FF
-		sta 	IF_Pos+1
-		lda 	#IF_Screen >> 16  		
-		sta 	IF_Pos+2
-		stz 	IF_Pos+3
-		pla
+;		pha
+;		stz 	IF_XPos 					; zero X position	
+;		lda 	#IF_Screen & $FF 			; set r/w pos.
+;		sta 	IF_Pos
+;		lda 	#(IF_Screen >> 8) & $FF
+;		sta 	IF_Pos+1
+;		lda 	#IF_Screen >> 16  		
+;		sta 	IF_Pos+2
+;		stz 	IF_Pos+3
+;		pla
 		rts
 
 ; *******************************************************************************************
@@ -54,16 +54,16 @@ IF_Home:
 ; *******************************************************************************************
 
 IF_NewLine:
-		pha
-		stz 	IF_XPos						; back to start of line
-		clc 								; down one line
-		lda 	IF_Pos
-		adc 	#64
-		sta 	IF_Pos
-		bcc 	_IF_NoCarry 				; carry through.
-		inc 	IF_Pos+1
+;		pha
+;		stz 	IF_XPos						; back to start of line
+;		clc 								; down one line
+;		lda 	IF_Pos
+;		adc 	#64
+;		sta 	IF_Pos
+;		bcc 	_IF_NoCarry 				; carry through.
+;		inc 	IF_Pos+1
 _IF_NoCarry:
-		pla
+;		pla
 		rts
 
 ; *******************************************************************************************
@@ -73,11 +73,11 @@ _IF_NoCarry:
 ; *******************************************************************************************
 
 IF_Read:
-		phy 								; save current Y
-		ldy 	IF_XPos 					; read character at current position
-		lda 	[IF_Pos],y
-		inc 	IF_XPos 					; step right.
-		ply									; restore Y
+;		phy 								; save current Y
+;		ldy 	IF_XPos 					; read character at current position
+;		lda 	[IF_Pos],y
+;		inc 	IF_XPos 					; step right.
+;		ply									; restore Y
 		rts
 
 ; *******************************************************************************************
@@ -87,11 +87,11 @@ IF_Read:
 ; *******************************************************************************************
 
 IF_Write:
-		phy 								; save current Y
-		ldy 	IF_XPos 					; write character at current position
-		sta 	[IF_Pos],y
-		inc 	IF_XPos 					; step right.
-		ply									; restore Y
+;		phy 								; save current Y
+;		ldy 	IF_XPos 					; write character at current position
+;		sta 	[IF_Pos],y
+;		inc 	IF_XPos 					; step right.
+;		ply									; restore Y
 		rts
 
 ; *******************************************************************************************
@@ -101,7 +101,7 @@ IF_Write:
 ; *******************************************************************************************
 
 IF_LeftOne:
-		dec 	IF_XPos
+;		dec 	IF_XPos
 		rts
 		
 ; *******************************************************************************************
@@ -111,7 +111,7 @@ IF_LeftOne:
 ; *******************************************************************************************
 
 IF_CheckBreak:
-		lda 	IF_PBreak					; non-zero if Ctrl+C pressed.
+;		lda 	IF_PBreak					; non-zero if Ctrl+C pressed.
 		rts
 
 ; *******************************************************************************************
@@ -121,13 +121,13 @@ IF_CheckBreak:
 ; *******************************************************************************************
 
 IF_GetKey:
-		lda 	IF_PKeyboard				; read keyboard
-		beq		_IFGK_NoKey 				; skip if zero,no key pressed
-		pha 								; key pressed, clear queue.
-		lda 	#0							
-		sta 	IF_PKeyboard
-		pla
+;		lda 	IF_PKeyboard				; read keyboard
+;		beq		_IFGK_NoKey 				; skip if zero,no key pressed
+;		pha 								; key pressed, clear queue.
+;		lda 	#0							
+;		sta 	IF_PKeyboard
+;		pla
 _IFGK_NoKey:
-		ora 	#0							; set Z flag appropriately.
+;		ora 	#0							; set Z flag appropriately.
 		rts
 

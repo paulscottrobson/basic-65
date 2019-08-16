@@ -1,9 +1,13 @@
 
 ; 64tass Turbo Assembler Macro V1.54.1900 listing file
-; 64tass -x -Wall -b -f -L rom.lst -o rom.bin basic.asm
-; Fri Aug 16 17:42:22 2019
+; 64tass -D CPU=\^"65816\^" -q -Wall -b -f -L rom.lst -o rom.bin basic.asm
+; Fri Aug 16 20:07:13 2019
 
 ;Offset	;Hex		;Monitor	;Source
+
+;******  Command line definitions
+
+="65816"				CPU="65816"
 
 ;******  Processing input file: basic.asm
 
@@ -42,8 +46,6 @@
 
 ;******  Return to file: basic.asm
 
->8000	48 65 6c 6c 6f 2c 20 74				.text 		"Hello, tim !"
->8008	69 6d 20 21
 
 ;******  Processing file: utility/tim.asm
 
@@ -477,7 +479,7 @@
 .c136	68		pla				pla 								; and exit.
 .c137	60		rts				rts
 .c138					_IFSOverflow:
-.c138	20 07 e2	jsr $e207			jsr 	ERR_Handler
+.c138	20 fd e1	jsr $e1fd			jsr 	ERR_Handler
 >c13b	43 6f 6e 73 74 61 6e 74				.text 	"Constant overflow",0
 >c143	20 6f 76 65 72 66 6c 6f 77 00
 .c14d					IFSX1ShiftLeft:
@@ -627,7 +629,7 @@
 .c251	68		pla				pla
 .c252	60		rts				rts
 .c253					FP_Overflow:
-.c253	20 07 e2	jsr $e207			jsr 	ERR_Handler
+.c253	20 fd e1	jsr $e1fd			jsr 	ERR_Handler
 >c256	46 6c 6f 61 74 69 6e 67				.text 	"Floating Point overflow",0
 >c25e	20 50 6f 69 6e 74 20 6f 76 65 72 66 6c 6f 77 00
 .c26e					FPUTimes10:
@@ -940,7 +942,7 @@
 ;******  Processing file: float/fpdivide.asm
 
 .c4a4					FPD_IsDivZero:
-.c4a4	20 07 e2	jsr $e207			jsr 		ERR_Handler
+.c4a4	20 fd e1	jsr $e1fd			jsr 		ERR_Handler
 >c4a7	44 69 76 69 73 69 6f 6e				.text 		"Division by zero",0
 >c4af	20 62 79 20 7a 65 72 6f 00
 .c4b8					FPDivide:
@@ -1219,7 +1221,7 @@
 .c66d	68		pla				pla
 .c66e	60		rts				rts
 .c66f					_FPFXOverflow:
-.c66f	20 07 e2	jsr $e207			jsr 	ERR_Handler
+.c66f	20 fd e1	jsr $e1fd			jsr 	ERR_Handler
 >c672	45 78 70 6f 6e 65 6e 74				.text 	"Exponent Range",0
 >c67a	20 52 61 6e 67 65 00
 
@@ -1654,140 +1656,2335 @@
 .e1ef	e2 30		sep #$30			sep 	#$30
 .e1f1	20 00 e0	jsr $e000			jsr 	IF_Reset 					; reset external interface
 .e1f4	20 4f e0	jsr $e04f			jsr 	IFT_ClearScreen
-.e1f7	20 0a e2	jsr $e20a			jsr 	FPTTest
-.e1fa	a9 00		lda #$00			lda 	#0
-.e1fc	8d 20 04	sta $0420			sta 	NumBufX
-.e1ff	a2 06		ldx #$06			ldx 	#6
-.e201	20 81 c6	jsr $c681			jsr 	FPToString
->e204	02						.byte 	$02
-.e205	80 fe		bra $e205	freeze:	bra 	freeze
-.e207					ERR_Handler:
-.e207	80 fe		bra $e207			bra 	ERR_Handler
-.e209					NMIHandler:
-.e209	40		rti				rti
+.e1f7	20 00 e2	jsr $e200			jsr 	FPTTest
+>e1fa	02						.byte 	$02
+.e1fb	80 fe		bra $e1fb	freeze:	bra 	freeze
+.e1fd					ERR_Handler:
+.e1fd	80 fe		bra $e1fd			bra 	ERR_Handler
+.e1ff					NMIHandler:
+.e1ff	40		rti				rti
 
 ;******  Processing file: testing/fptest.asm
 
-.e20a					FPTTest:
-.e20a	a9 c2		lda #$c2			lda 	#FPTTestData & $FF 			; set zGenPtr to data.
-.e20c	85 1a		sta $1a				sta 	zGenPtr
-.e20e	a9 e2		lda #$e2			lda 	#FPTTestData >> 8
-.e210	85 1b		sta $1b				sta 	zGenPtr+1
-.e212	a2 00		ldx #$00			ldx 	#0 							; start at stack bottom.
-.e214	a5 1b		lda $1b		FPTLoop:lda 	zGenPtr+1
-.e216	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
-.e219	a5 1a		lda $1a				lda 	zGenPtr
-.e21b	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
-.e21e	a9 2e		lda #$2e			lda 	#"."
-.e220	20 80 e0	jsr $e080			jsr		IFT_PrintCharacter
-.e223	20 b3 e2	jsr $e2b3			jsr 	FPTGet 						; get next command
-.e226	c9 00		cmp #$00			cmp 	#0 							; zero, exit
-.e228	f0 58		beq $e282			beq 	FPTExit
-.e22a	c9 01		cmp #$01			cmp 	#1 							; 1,load
-.e22c	f0 46		beq $e274			beq 	FPTLoad
-.e22e	c9 2b		cmp #$2b			cmp 	#"+" 						; the -1/0/1 value in AC.
-.e230	d0 0b		bne $e23d			bne 	_skip1
-.e232	20 a7 e2	jsr $e2a7			jsr 	FPT_Preamble
-.e235	20 39 c3	jsr $c339			jsr 	FPAdd
-.e238	20 ad e2	jsr $e2ad			jsr 	FPT_Postamble
-.e23b	80 d7		bra $e214			bra 	FPTLoop
-.e23d					_skip1:
-.e23d	c9 2d		cmp #$2d			cmp 	#"-" 						; the -1/0/1 value in AC.
-.e23f	d0 0b		bne $e24c			bne 	_skip1
-.e241	20 a7 e2	jsr $e2a7			jsr 	FPT_Preamble
-.e244	20 2f c3	jsr $c32f			jsr 	FPSubtract
-.e247	20 ad e2	jsr $e2ad			jsr 	FPT_Postamble
-.e24a	80 c8		bra $e214			bra 	FPTLoop
-.e24c					_skip1:
-.e24c	c9 2a		cmp #$2a			cmp 	#"*" 						; the -1/0/1 value in AC.
-.e24e	d0 0b		bne $e25b			bne 	_skip1
-.e250	20 a7 e2	jsr $e2a7			jsr 	FPT_Preamble
-.e253	20 09 c4	jsr $c409			jsr 	FPMultiply
-.e256	20 ad e2	jsr $e2ad			jsr 	FPT_Postamble
-.e259	80 b9		bra $e214			bra 	FPTLoop
-.e25b					_skip1:
-.e25b	c9 2f		cmp #$2f			cmp 	#"/" 						; the -1/0/1 value in AC.
-.e25d	d0 0b		bne $e26a			bne 	_skip1
-.e25f	20 a7 e2	jsr $e2a7			jsr 	FPT_Preamble
-.e262	20 b8 c4	jsr $c4b8			jsr 	FPDivide
-.e265	20 ad e2	jsr $e2ad			jsr 	FPT_Postamble
-.e268	80 aa		bra $e214			bra 	FPTLoop
-.e26a					_skip1:
-.e26a	c9 7e		cmp #$7e			cmp 	#"~" 						; ~, compare
-.e26c	f0 1a		beq $e288			beq 	FPTCompare
-.e26e	c9 3d		cmp #$3d			cmp 	#"="						; = check equal
-.e270	f0 28		beq $e29a			beq 	FPTCheck
-.e272					FPTError:
-.e272	80 fe		bra $e272			bra 	FPTError
-.e274					FPTLoad:
-.e274	a0 06		ldy #$06			ldy 	#6 							; data to copy
-.e276					_FPTLoadLoop:
-.e276	20 b3 e2	jsr $e2b3			jsr 	FPTGet
-.e279	9d 00 03	sta $0300,x			sta 	XS_Mantissa,x
-.e27c	e8		inx				inx
-.e27d	88		dey				dey
-.e27e	d0 f6		bne $e276			bne 	_FPTLoadLoop
-.e280	80 92		bra $e214			bra 	FPTLoop
-.e282					FPTExit:
-.e282	a9 2a		lda #$2a			lda 	#42
-.e284	20 80 e0	jsr $e080			jsr 	IFT_PrintCharacter
-.e287	60		rts				rts
-.e288					FPTCompare:
-.e288	20 a7 e2	jsr $e2a7			jsr 	FPT_Preamble
-.e28b	20 3e c5	jsr $c53e			jsr 	FPCompare
-.e28e	20 6d c1	jsr $c16d			jsr 	FPUSetInteger
-.e291	20 ab c1	jsr $c1ab			jsr 	FPUToFloat
-.e294	20 ad e2	jsr $e2ad			jsr 	FPT_Postamble
-.e297	4c 14 e2	jmp $e214			jmp 	FPTLoop
-.e29a					FPTCheck:
-.e29a	20 a7 e2	jsr $e2a7			jsr 	FPT_Preamble
-.e29d	20 3e c5	jsr $c53e			jsr 	FPCompare
-.e2a0	09 00		ora #$00			ora 	#0
-.e2a2					_FPTCFail:
-.e2a2	d0 fe		bne $e2a2			bne 	_FPTCFail
-.e2a4	4c 14 e2	jmp $e214			jmp 	FPTLoop
-.e2a7					FPT_Preamble:
-.e2a7	8a		txa				txa
-.e2a8	38		sec				sec
-.e2a9	e9 0c		sbc #$0c			sbc 	#12
-.e2ab	aa		tax				tax
-.e2ac	60		rts				rts
-.e2ad					FPT_Postamble:
-.e2ad	8a		txa				txa
-.e2ae	18		clc				clc
-.e2af	69 06		adc #$06			adc 	#6
-.e2b1	aa		tax				tax
-.e2b2	60		rts				rts
-.e2b3	5a		phy		FPTGet:	phy
-.e2b4	a0 00		ldy #$00			ldy 	#0
-.e2b6	b1 1a		lda ($1a),y			lda 	(zGenPtr),y
-.e2b8	48		pha				pha
-.e2b9	e6 1a		inc $1a				inc 	zGenPtr
-.e2bb	d0 02		bne $e2bf			bne 	_FPTGet1
-.e2bd	e6 1b		inc $1b				inc 	zGenPtr+1
-.e2bf					_FPTGet1:
-.e2bf	68		pla				pla
-.e2c0	7a		ply				ply
-.e2c1	60		rts				rts
-.e2c2					FPTTestData:
+.e200					FPTTest:
+.e200	a9 b8		lda #$b8			lda 	#FPTTestData & $FF 			; set zGenPtr to data.
+.e202	85 1a		sta $1a				sta 	zGenPtr
+.e204	a9 e2		lda #$e2			lda 	#FPTTestData >> 8
+.e206	85 1b		sta $1b				sta 	zGenPtr+1
+.e208	a2 00		ldx #$00			ldx 	#0 							; start at stack bottom.
+.e20a	a5 1b		lda $1b		FPTLoop:lda 	zGenPtr+1
+.e20c	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
+.e20f	a5 1a		lda $1a				lda 	zGenPtr
+.e211	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
+.e214	a9 2e		lda #$2e			lda 	#"."
+.e216	20 80 e0	jsr $e080			jsr		IFT_PrintCharacter
+.e219	20 a9 e2	jsr $e2a9			jsr 	FPTGet 						; get next command
+.e21c	c9 00		cmp #$00			cmp 	#0 							; zero, exit
+.e21e	f0 58		beq $e278			beq 	FPTExit
+.e220	c9 01		cmp #$01			cmp 	#1 							; 1,load
+.e222	f0 46		beq $e26a			beq 	FPTLoad
+.e224	c9 2b		cmp #$2b			cmp 	#"+" 						; the -1/0/1 value in AC.
+.e226	d0 0b		bne $e233			bne 	_skip1
+.e228	20 9d e2	jsr $e29d			jsr 	FPT_Preamble
+.e22b	20 39 c3	jsr $c339			jsr 	FPAdd
+.e22e	20 a3 e2	jsr $e2a3			jsr 	FPT_Postamble
+.e231	80 d7		bra $e20a			bra 	FPTLoop
+.e233					_skip1:
+.e233	c9 2d		cmp #$2d			cmp 	#"-" 						; the -1/0/1 value in AC.
+.e235	d0 0b		bne $e242			bne 	_skip1
+.e237	20 9d e2	jsr $e29d			jsr 	FPT_Preamble
+.e23a	20 2f c3	jsr $c32f			jsr 	FPSubtract
+.e23d	20 a3 e2	jsr $e2a3			jsr 	FPT_Postamble
+.e240	80 c8		bra $e20a			bra 	FPTLoop
+.e242					_skip1:
+.e242	c9 2a		cmp #$2a			cmp 	#"*" 						; the -1/0/1 value in AC.
+.e244	d0 0b		bne $e251			bne 	_skip1
+.e246	20 9d e2	jsr $e29d			jsr 	FPT_Preamble
+.e249	20 09 c4	jsr $c409			jsr 	FPMultiply
+.e24c	20 a3 e2	jsr $e2a3			jsr 	FPT_Postamble
+.e24f	80 b9		bra $e20a			bra 	FPTLoop
+.e251					_skip1:
+.e251	c9 2f		cmp #$2f			cmp 	#"/" 						; the -1/0/1 value in AC.
+.e253	d0 0b		bne $e260			bne 	_skip1
+.e255	20 9d e2	jsr $e29d			jsr 	FPT_Preamble
+.e258	20 b8 c4	jsr $c4b8			jsr 	FPDivide
+.e25b	20 a3 e2	jsr $e2a3			jsr 	FPT_Postamble
+.e25e	80 aa		bra $e20a			bra 	FPTLoop
+.e260					_skip1:
+.e260	c9 7e		cmp #$7e			cmp 	#"~" 						; ~, compare
+.e262	f0 1a		beq $e27e			beq 	FPTCompare
+.e264	c9 3d		cmp #$3d			cmp 	#"="						; = check equal
+.e266	f0 28		beq $e290			beq 	FPTCheck
+.e268					FPTError:
+.e268	80 fe		bra $e268			bra 	FPTError
+.e26a					FPTLoad:
+.e26a	a0 06		ldy #$06			ldy 	#6 							; data to copy
+.e26c					_FPTLoadLoop:
+.e26c	20 a9 e2	jsr $e2a9			jsr 	FPTGet
+.e26f	9d 00 03	sta $0300,x			sta 	XS_Mantissa,x
+.e272	e8		inx				inx
+.e273	88		dey				dey
+.e274	d0 f6		bne $e26c			bne 	_FPTLoadLoop
+.e276	80 92		bra $e20a			bra 	FPTLoop
+.e278					FPTExit:
+.e278	a9 2a		lda #$2a			lda 	#42
+.e27a	20 80 e0	jsr $e080			jsr 	IFT_PrintCharacter
+.e27d	60		rts				rts
+.e27e					FPTCompare:
+.e27e	20 9d e2	jsr $e29d			jsr 	FPT_Preamble
+.e281	20 3e c5	jsr $c53e			jsr 	FPCompare
+.e284	20 6d c1	jsr $c16d			jsr 	FPUSetInteger
+.e287	20 ab c1	jsr $c1ab			jsr 	FPUToFloat
+.e28a	20 a3 e2	jsr $e2a3			jsr 	FPT_Postamble
+.e28d	4c 0a e2	jmp $e20a			jmp 	FPTLoop
+.e290					FPTCheck:
+.e290	20 9d e2	jsr $e29d			jsr 	FPT_Preamble
+.e293	20 3e c5	jsr $c53e			jsr 	FPCompare
+.e296	09 00		ora #$00			ora 	#0
+.e298					_FPTCFail:
+.e298	d0 fe		bne $e298			bne 	_FPTCFail
+.e29a	4c 0a e2	jmp $e20a			jmp 	FPTLoop
+.e29d					FPT_Preamble:
+.e29d	8a		txa				txa
+.e29e	38		sec				sec
+.e29f	e9 0c		sbc #$0c			sbc 	#12
+.e2a1	aa		tax				tax
+.e2a2	60		rts				rts
+.e2a3					FPT_Postamble:
+.e2a3	8a		txa				txa
+.e2a4	18		clc				clc
+.e2a5	69 06		adc #$06			adc 	#6
+.e2a7	aa		tax				tax
+.e2a8	60		rts				rts
+.e2a9	5a		phy		FPTGet:	phy
+.e2aa	a0 00		ldy #$00			ldy 	#0
+.e2ac	b1 1a		lda ($1a),y			lda 	(zGenPtr),y
+.e2ae	48		pha				pha
+.e2af	e6 1a		inc $1a				inc 	zGenPtr
+.e2b1	d0 02		bne $e2b5			bne 	_FPTGet1
+.e2b3	e6 1b		inc $1b				inc 	zGenPtr+1
+.e2b5					_FPTGet1:
+.e2b5	68		pla				pla
+.e2b6	7a		ply				ply
+.e2b7	60		rts				rts
+.e2b8					FPTTestData:
 
 ;******  Processing file: testing/script.inc
 
->e2c2	01					.byte 	1     ; *** Load Float 99.94 ***
->e2c3	ae 47 e1 c7				.dword 	$c7e147ae
->e2c7	87 00					.byte 	$87,$0
->e2c9	01					.byte 	1     ; *** Load Float 1370244444.14 ***
->e2ca	b8 8a 58 a3				.dword 	$a3588ab8
->e2ce	9f 00					.byte 	$9f,$0
->e2d0	00					.byte 	0
+>e2b8	01					.byte 	1	; *** Load Integer 99999 ***
+>e2b9	9f 86 01 00				.dword 	$1869f
+>e2bd	00 01					.byte 	0,$01
+>e2bf	01					.byte 	1     ; *** Load Float -0.810638 ***
+>e2c0	d2 f8 85 cf				.dword 	$cf85f8d2
+>e2c4	80 80					.byte 	$80,$80
+>e2c6	01					.byte 	1     ; *** Load Float -102.48 ***
+>e2c7	8f c2 f5 cc				.dword 	$ccf5c28f
+>e2cb	87 80					.byte 	$87,$80
+>e2cd	2b					.byte 	$2b   ; *** Command + ***
+>e2ce	01					.byte 	1     ; *** Load Float -103.290638 ***
+>e2cf	81 ce 94 ce				.dword 	$ce94ce81
+>e2d3	87 80					.byte 	$87,$80
+>e2d5	3d					.byte 	$3d   ; *** Command = ***
+>e2d6	01					.byte 	1     ; *** Load Float 2.768391 ***
+>e2d7	71 51 2d b1				.dword 	$b12d5171
+>e2db	82 00					.byte 	$82,$0
+>e2dd	01					.byte 	1     ; *** Load Float 4.0 ***
+>e2de	00 00 00 80				.dword 	$80000000
+>e2e2	83 00					.byte 	$83,$0
+>e2e4	2d					.byte 	$2d   ; *** Command - ***
+>e2e5	01					.byte 	1     ; *** Load Float -1.2316090000000002 ***
+>e2e6	1c 5d a5 9d				.dword 	$9da55d1c
+>e2ea	81 80					.byte 	$81,$80
+>e2ec	3d					.byte 	$3d   ; *** Command = ***
+>e2ed	01					.byte 	1     ; *** Load Float 3.910975 ***
+>e2ee	16 6a 4d fa				.dword 	$fa4d6a16
+>e2f2	82 00					.byte 	$82,$0
+>e2f4	01					.byte 	1     ; *** Load Float -9.0 ***
+>e2f5	00 00 00 90				.dword 	$90000000
+>e2f9	84 80					.byte 	$84,$80
+>e2fb	2f					.byte 	$2f   ; *** Command / ***
+>e2fc	01					.byte 	1     ; *** Load Float -0.4345527777777778 ***
+>e2fd	a1 b3 7d de				.dword 	$de7db3a1
+>e301	7f 80					.byte 	$7f,$80
+>e303	3d					.byte 	$3d   ; *** Command = ***
+>e304	01					.byte 	1     ; *** Load Float -2.0 ***
+>e305	00 00 00 80				.dword 	$80000000
+>e309	82 80					.byte 	$82,$80
+>e30b	01					.byte 	1     ; *** Load Float 19.0 ***
+>e30c	00 00 00 98				.dword 	$98000000
+>e310	85 00					.byte 	$85,$0
+>e312	7e					.byte 	$7e   ; *** Command ~ ***
+>e313	01					.byte 	1     ; *** Load Float -1 ***
+>e314	00 00 00 80				.dword 	$80000000
+>e318	81 80					.byte 	$81,$80
+>e31a	3d					.byte 	$3d   ; *** Command = ***
+>e31b	01					.byte 	1     ; *** Load Float 6.148325 ***
+>e31c	12 14 bf c4				.dword 	$c4bf1412
+>e320	83 00					.byte 	$83,$0
+>e322	01					.byte 	1     ; *** Load Float 1.181577317765914e-12 ***
+>e323	31 cf 4a a6				.dword 	$a64acf31
+>e327	59 00					.byte 	$59,$0
+>e329	7e					.byte 	$7e   ; *** Command ~ ***
+>e32a	01					.byte 	1     ; *** Load Float 1 ***
+>e32b	00 00 00 80				.dword 	$80000000
+>e32f	81 00					.byte 	$81,$0
+>e331	3d					.byte 	$3d   ; *** Command = ***
+>e332	01					.byte 	1     ; *** Load Float -18.0 ***
+>e333	00 00 00 90				.dword 	$90000000
+>e337	85 80					.byte 	$85,$80
+>e339	01					.byte 	1     ; *** Load Float 1.051512 ***
+>e33a	f9 f1 97 86				.dword 	$8697f1f9
+>e33e	81 00					.byte 	$81,$0
+>e340	2a					.byte 	$2a   ; *** Command * ***
+>e341	01					.byte 	1     ; *** Load Float -18.927216 ***
+>e342	38 f0 6a 97				.dword 	$976af038
+>e346	85 80					.byte 	$85,$80
+>e348	3d					.byte 	$3d   ; *** Command = ***
+>e349	01					.byte 	1     ; *** Load Float 5.655817 ***
+>e34a	ee 73 fc b4				.dword 	$b4fc73ee
+>e34e	83 00					.byte 	$83,$0
+>e350	01					.byte 	1     ; *** Load Float -5646095.220736 ***
+>e351	71 1e 4e ac				.dword 	$ac4e1e71
+>e355	97 80					.byte 	$97,$80
+>e357	2a					.byte 	$2a   ; *** Command * ***
+>e358	01					.byte 	1     ; *** Load Float -31933281.33305742 ***
+>e359	aa b0 a1 f3				.dword 	$f3a1b0aa
+>e35d	99 80					.byte 	$99,$80
+>e35f	3d					.byte 	$3d   ; *** Command = ***
+>e360	01					.byte 	1     ; *** Load Float 5.0 ***
+>e361	00 00 00 a0				.dword 	$a0000000
+>e365	83 00					.byte 	$83,$0
+>e367	01					.byte 	1     ; *** Load Float -2.207274519605562e-12 ***
+>e368	0a b9 52 9b				.dword 	$9b52b90a
+>e36c	5a 80					.byte 	$5a,$80
+>e36e	2a					.byte 	$2a   ; *** Command * ***
+>e36f	01					.byte 	1     ; *** Load Float -1.103637259802781e-11 ***
+>e370	4d 67 27 c2				.dword 	$c227674d
+>e374	5c 80					.byte 	$5c,$80
+>e376	3d					.byte 	$3d   ; *** Command = ***
+>e377	01					.byte 	1     ; *** Load Float -6.0 ***
+>e378	00 00 00 c0				.dword 	$c0000000
+>e37c	83 80					.byte 	$83,$80
+>e37e	01					.byte 	1     ; *** Load Float 3.724867 ***
+>e37f	8e 38 64 ee				.dword 	$ee64388e
+>e383	82 00					.byte 	$82,$0
+>e385	7e					.byte 	$7e   ; *** Command ~ ***
+>e386	01					.byte 	1     ; *** Load Float -1 ***
+>e387	00 00 00 80				.dword 	$80000000
+>e38b	81 80					.byte 	$81,$80
+>e38d	3d					.byte 	$3d   ; *** Command = ***
+>e38e	01					.byte 	1     ; *** Load Float 4.606481 ***
+>e38f	d7 4a 68 93				.dword 	$93684ad7
+>e393	83 00					.byte 	$83,$0
+>e395	01					.byte 	1     ; *** Load Float 45.17 ***
+>e396	7a 14 ae b4				.dword 	$b4ae147a
+>e39a	86 00					.byte 	$86,$0
+>e39c	2b					.byte 	$2b   ; *** Command + ***
+>e39d	01					.byte 	1     ; *** Load Float 49.776481000000004 ***
+>e39e	d5 1d 1b c7				.dword 	$c71b1dd5
+>e3a2	86 00					.byte 	$86,$0
+>e3a4	3d					.byte 	$3d   ; *** Command = ***
+>e3a5	01					.byte 	1     ; *** Load Float 7.633596 ***
+>e3a6	1e 6b 46 f4				.dword 	$f4466b1e
+>e3aa	83 00					.byte 	$83,$0
+>e3ac	01					.byte 	1     ; *** Load Float -4.0 ***
+>e3ad	00 00 00 80				.dword 	$80000000
+>e3b1	83 80					.byte 	$83,$80
+>e3b3	2f					.byte 	$2f   ; *** Command / ***
+>e3b4	01					.byte 	1     ; *** Load Float -1.908399 ***
+>e3b5	1e 6b 46 f4				.dword 	$f4466b1e
+>e3b9	81 80					.byte 	$81,$80
+>e3bb	3d					.byte 	$3d   ; *** Command = ***
+>e3bc	01					.byte 	1     ; *** Load Float 3.226939 ***
+>e3bd	27 2b 86 ce				.dword 	$ce862b27
+>e3c1	82 00					.byte 	$82,$0
+>e3c3	01					.byte 	1     ; *** Load Float 416.99 ***
+>e3c4	51 b8 7e d0				.dword 	$d07eb851
+>e3c8	89 00					.byte 	$89,$0
+>e3ca	2b					.byte 	$2b   ; *** Command + ***
+>e3cb	01					.byte 	1     ; *** Load Float 420.216939 ***
+>e3cc	a8 c4 1b d2				.dword 	$d21bc4a8
+>e3d0	89 00					.byte 	$89,$0
+>e3d2	3d					.byte 	$3d   ; *** Command = ***
+>e3d3	01					.byte 	1     ; *** Load Float 17.0 ***
+>e3d4	00 00 00 88				.dword 	$88000000
+>e3d8	85 00					.byte 	$85,$0
+>e3da	01					.byte 	1     ; *** Load Float 18.0 ***
+>e3db	00 00 00 90				.dword 	$90000000
+>e3df	85 00					.byte 	$85,$0
+>e3e1	2a					.byte 	$2a   ; *** Command * ***
+>e3e2	01					.byte 	1     ; *** Load Float 306.0 ***
+>e3e3	00 00 00 99				.dword 	$99000000
+>e3e7	89 00					.byte 	$89,$0
+>e3e9	3d					.byte 	$3d   ; *** Command = ***
+>e3ea	01					.byte 	1     ; *** Load Float -14840.823808000001 ***
+>e3eb	94 4b e3 e7				.dword 	$e7e34b94
+>e3ef	8e 80					.byte 	$8e,$80
+>e3f1	01					.byte 	1     ; *** Load Float -1931281.956864 ***
+>e3f2	a7 8f c0 eb				.dword 	$ebc08fa7
+>e3f6	95 80					.byte 	$95,$80
+>e3f8	7e					.byte 	$7e   ; *** Command ~ ***
+>e3f9	01					.byte 	1     ; *** Load Float 1 ***
+>e3fa	00 00 00 80				.dword 	$80000000
+>e3fe	81 00					.byte 	$81,$0
+>e400	3d					.byte 	$3d   ; *** Command = ***
+>e401	01					.byte 	1     ; *** Load Float 893190469847.0891 ***
+>e402	f8 4c f6 cf				.dword 	$cff64cf8
+>e406	a8 00					.byte 	$a8,$0
+>e408	01					.byte 	1     ; *** Load Float 9.19558 ***
+>e409	7e 18 21 93				.dword 	$9321187e
+>e40d	84 00					.byte 	$84,$0
+>e40f	2a					.byte 	$2a   ; *** Command * ***
+>e410	01					.byte 	1     ; *** Load Float 8213404420716.495 ***
+>e411	b1 a1 0a ef				.dword 	$ef0aa1b1
+>e415	ab 00					.byte 	$ab,$0
+>e417	3d					.byte 	$3d   ; *** Command = ***
+>e418	01					.byte 	1     ; *** Load Float 8.708695 ***
+>e419	91 d0 56 8b				.dword 	$8b56d091
+>e41d	84 00					.byte 	$84,$0
+>e41f	01					.byte 	1     ; *** Load Float -8.0 ***
+>e420	00 00 00 80				.dword 	$80000000
+>e424	84 80					.byte 	$84,$80
+>e426	2f					.byte 	$2f   ; *** Command / ***
+>e427	01					.byte 	1     ; *** Load Float -1.088586875 ***
+>e428	91 d0 56 8b				.dword 	$8b56d091
+>e42c	81 80					.byte 	$81,$80
+>e42e	3d					.byte 	$3d   ; *** Command = ***
+>e42f	01					.byte 	1     ; *** Load Float 8682729.373696 ***
+>e430	5f e9 7c 84				.dword 	$847ce95f
+>e434	98 00					.byte 	$98,$0
+>e436	01					.byte 	1     ; *** Load Float -19.0 ***
+>e437	00 00 00 98				.dword 	$98000000
+>e43b	85 80					.byte 	$85,$80
+>e43d	7e					.byte 	$7e   ; *** Command ~ ***
+>e43e	01					.byte 	1     ; *** Load Float 1 ***
+>e43f	00 00 00 80				.dword 	$80000000
+>e443	81 00					.byte 	$81,$0
+>e445	3d					.byte 	$3d   ; *** Command = ***
+>e446	01					.byte 	1     ; *** Load Float 17.0 ***
+>e447	00 00 00 88				.dword 	$88000000
+>e44b	85 00					.byte 	$85,$0
+>e44d	01					.byte 	1     ; *** Load Float 8.434507 ***
+>e44e	9c bd f3 86				.dword 	$86f3bd9c
+>e452	84 00					.byte 	$84,$0
+>e454	2b					.byte 	$2b   ; *** Command + ***
+>e455	01					.byte 	1     ; *** Load Float 25.434507 ***
+>e456	ce de 79 cb				.dword 	$cb79dece
+>e45a	85 00					.byte 	$85,$0
+>e45c	3d					.byte 	$3d   ; *** Command = ***
+>e45d	01					.byte 	1     ; *** Load Float 169.9 ***
+>e45e	66 66 e6 a9				.dword 	$a9e66666
+>e462	88 00					.byte 	$88,$0
+>e464	01					.byte 	1     ; *** Load Float -8.0 ***
+>e465	00 00 00 80				.dword 	$80000000
+>e469	84 80					.byte 	$84,$80
+>e46b	2d					.byte 	$2d   ; *** Command - ***
+>e46c	01					.byte 	1     ; *** Load Float 177.9 ***
+>e46d	66 66 e6 b1				.dword 	$b1e66666
+>e471	88 00					.byte 	$88,$0
+>e473	3d					.byte 	$3d   ; *** Command = ***
+>e474	01					.byte 	1     ; *** Load Float 13.0 ***
+>e475	00 00 00 d0				.dword 	$d0000000
+>e479	84 00					.byte 	$84,$0
+>e47b	01					.byte 	1     ; *** Load Float 1.209657 ***
+>e47c	63 0a d6 9a				.dword 	$9ad60a63
+>e480	81 00					.byte 	$81,$0
+>e482	2a					.byte 	$2a   ; *** Command * ***
+>e483	01					.byte 	1     ; *** Load Float 15.725541 ***
+>e484	e1 d0 9b fb				.dword 	$fb9bd0e1
+>e488	84 00					.byte 	$84,$0
+>e48a	3d					.byte 	$3d   ; *** Command = ***
+>e48b	01					.byte 	1     ; *** Load Float 18.0 ***
+>e48c	00 00 00 90				.dword 	$90000000
+>e490	85 00					.byte 	$85,$0
+>e492	01					.byte 	1     ; *** Load Float 17.0 ***
+>e493	00 00 00 88				.dword 	$88000000
+>e497	85 00					.byte 	$85,$0
+>e499	2f					.byte 	$2f   ; *** Command / ***
+>e49a	01					.byte 	1     ; *** Load Float 1.0588235294117647 ***
+>e49b	87 87 87 87				.dword 	$87878787
+>e49f	81 00					.byte 	$81,$0
+>e4a1	3d					.byte 	$3d   ; *** Command = ***
+>e4a2	01					.byte 	1     ; *** Load Float 7451278632.288256 ***
+>e4a3	94 be 10 de				.dword 	$de10be94
+>e4a7	a1 00					.byte 	$a1,$0
+>e4a9	01					.byte 	1     ; *** Load Float 6.869421 ***
+>e4aa	fd 4b d2 db				.dword 	$dbd24bfd
+>e4ae	83 00					.byte 	$83,$0
+>e4b0	7e					.byte 	$7e   ; *** Command ~ ***
+>e4b1	01					.byte 	1     ; *** Load Float 1 ***
+>e4b2	00 00 00 80				.dword 	$80000000
+>e4b6	81 00					.byte 	$81,$0
+>e4b8	3d					.byte 	$3d   ; *** Command = ***
+>e4b9	01					.byte 	1     ; *** Load Float 4.0 ***
+>e4ba	00 00 00 80				.dword 	$80000000
+>e4be	83 00					.byte 	$83,$0
+>e4c0	01					.byte 	1     ; *** Load Float 129.28512 ***
+>e4c1	9f fd 48 81				.dword 	$8148fd9f
+>e4c5	88 00					.byte 	$88,$0
+>e4c7	7e					.byte 	$7e   ; *** Command ~ ***
+>e4c8	01					.byte 	1     ; *** Load Float -1 ***
+>e4c9	00 00 00 80				.dword 	$80000000
+>e4cd	81 80					.byte 	$81,$80
+>e4cf	3d					.byte 	$3d   ; *** Command = ***
+>e4d0	01					.byte 	1     ; *** Load Float 7.725168 ***
+>e4d1	85 93 34 f7				.dword 	$f7349385
+>e4d5	83 00					.byte 	$83,$0
+>e4d7	01					.byte 	1     ; *** Load Float 6.704608 ***
+>e4d8	13 26 8c d6				.dword 	$d68c2613
+>e4dc	83 00					.byte 	$83,$0
+>e4de	2f					.byte 	$2f   ; *** Command / ***
+>e4df	01					.byte 	1     ; *** Load Float 1.1522176986335368 ***
+>e4e0	9a de 7b 93				.dword 	$937bde9a
+>e4e4	81 00					.byte 	$81,$0
+>e4e6	3d					.byte 	$3d   ; *** Command = ***
+>e4e7	01					.byte 	1     ; *** Load Float 5.10096549987793e-07 ***
+>e4e8	68 91 ed 88				.dword 	$88ed9168
+>e4ec	6c 00					.byte 	$6c,$0
+>e4ee	01					.byte 	1     ; *** Load Float 9.541238 ***
+>e4ef	2d e9 a8 98				.dword 	$98a8e92d
+>e4f3	84 00					.byte 	$84,$0
+>e4f5	2f					.byte 	$2f   ; *** Command / ***
+>e4f6	01					.byte 	1     ; *** Load Float 5.3462302270186844e-08 ***
+>e4f7	49 6c 9e e5				.dword 	$e59e6c49
+>e4fb	68 00					.byte 	$68,$0
+>e4fd	3d					.byte 	$3d   ; *** Command = ***
+>e4fe	01					.byte 	1     ; *** Load Float 0.0 ***
+>e4ff	00 00 00 00				.dword 	$0
+>e503	80 40					.byte 	$80,$40
+>e505	01					.byte 	1     ; *** Load Float 2.91498 ***
+>e506	46 08 8f ba				.dword 	$ba8f0846
+>e50a	82 00					.byte 	$82,$0
+>e50c	2a					.byte 	$2a   ; *** Command * ***
+>e50d	01					.byte 	1     ; *** Load Float 0.0 ***
+>e50e	00 00 00 00				.dword 	$0
+>e512	80 40					.byte 	$80,$40
+>e514	3d					.byte 	$3d   ; *** Command = ***
+>e515	01					.byte 	1     ; *** Load Float 9.560549 ***
+>e516	3a 02 f8 98				.dword 	$98f8023a
+>e51a	84 00					.byte 	$84,$0
+>e51c	01					.byte 	1     ; *** Load Float 46236346311887.555 ***
+>e51d	fd f3 34 a8				.dword 	$a834f3fd
+>e521	ae 00					.byte 	$ae,$0
+>e523	2a					.byte 	$2a   ; *** Command * ***
+>e524	01					.byte 	1     ; *** Load Float 442044854495770.25 ***
+>e525	43 cb 04 c9				.dword 	$c904cb43
+>e529	b1 00					.byte 	$b1,$0
+>e52b	3d					.byte 	$3d   ; *** Command = ***
+>e52c	01					.byte 	1     ; *** Load Float 5.903417 ***
+>e52d	c4 ca e8 bc				.dword 	$bce8cac4
+>e531	83 00					.byte 	$83,$0
+>e533	01					.byte 	1     ; *** Load Float 4.087682 ***
+>e534	7b 4a ce 82				.dword 	$82ce4a7b
+>e538	83 00					.byte 	$83,$0
+>e53a	2b					.byte 	$2b   ; *** Command + ***
+>e53b	01					.byte 	1     ; *** Load Float 9.991099 ***
+>e53c	a0 8a db 9f				.dword 	$9fdb8aa0
+>e540	84 00					.byte 	$84,$0
+>e542	3d					.byte 	$3d   ; *** Command = ***
+>e543	01					.byte 	1     ; *** Load Float 0.730039 ***
+>e544	fd d5 e3 ba				.dword 	$bae3d5fd
+>e548	80 00					.byte 	$80,$0
+>e54a	01					.byte 	1     ; *** Load Float -12.21 ***
+>e54b	f5 28 5c c3				.dword 	$c35c28f5
+>e54f	84 80					.byte 	$84,$80
+>e551	2f					.byte 	$2f   ; *** Command / ***
+>e552	01					.byte 	1     ; *** Load Float -0.059790253890253886 ***
+>e553	11 a0 e6 f4				.dword 	$f4e6a011
+>e557	7c 80					.byte 	$7c,$80
+>e559	3d					.byte 	$3d   ; *** Command = ***
+>e55a	01					.byte 	1     ; *** Load Float 3.435549 ***
+>e55b	e9 08 e0 db				.dword 	$dbe008e9
+>e55f	82 00					.byte 	$82,$0
+>e561	01					.byte 	1     ; *** Load Float 345.73 ***
+>e562	a3 70 dd ac				.dword 	$acdd70a3
+>e566	89 00					.byte 	$89,$0
+>e568	2d					.byte 	$2d   ; *** Command - ***
+>e569	01					.byte 	1     ; *** Load Float -342.29445100000004 ***
+>e56a	92 b0 25 ab				.dword 	$ab25b092
+>e56e	89 80					.byte 	$89,$80
+>e570	3d					.byte 	$3d   ; *** Command = ***
+>e571	01					.byte 	1     ; *** Load Float 4930648225.611776 ***
+>e572	50 dc f1 92				.dword 	$92f1dc50
+>e576	a1 00					.byte 	$a1,$0
+>e578	01					.byte 	1     ; *** Load Float 0.0 ***
+>e579	00 00 00 00				.dword 	$0
+>e57d	80 40					.byte 	$80,$40
+>e57f	2a					.byte 	$2a   ; *** Command * ***
+>e580	01					.byte 	1     ; *** Load Float 0.0 ***
+>e581	00 00 00 00				.dword 	$0
+>e585	80 40					.byte 	$80,$40
+>e587	3d					.byte 	$3d   ; *** Command = ***
+>e588	01					.byte 	1     ; *** Load Float -15.0 ***
+>e589	00 00 00 f0				.dword 	$f0000000
+>e58d	84 80					.byte 	$84,$80
+>e58f	01					.byte 	1     ; *** Load Float 561.34 ***
+>e590	8f c2 55 8c				.dword 	$8c55c28f
+>e594	8a 00					.byte 	$8a,$0
+>e596	2a					.byte 	$2a   ; *** Command * ***
+>e597	01					.byte 	1     ; *** Load Float -8420.1 ***
+>e598	66 66 90 83				.dword 	$83906666
+>e59c	8e 80					.byte 	$8e,$80
+>e59e	3d					.byte 	$3d   ; *** Command = ***
+>e59f	01					.byte 	1     ; *** Load Float 0.0 ***
+>e5a0	00 00 00 00				.dword 	$0
+>e5a4	80 40					.byte 	$80,$40
+>e5a6	01					.byte 	1     ; *** Load Float -19.0 ***
+>e5a7	00 00 00 98				.dword 	$98000000
+>e5ab	85 80					.byte 	$85,$80
+>e5ad	2f					.byte 	$2f   ; *** Command / ***
+>e5ae	01					.byte 	1     ; *** Load Float -0.0 ***
+>e5af	00 00 00 00				.dword 	$0
+>e5b3	80 40					.byte 	$80,$40
+>e5b5	3d					.byte 	$3d   ; *** Command = ***
+>e5b6	01					.byte 	1     ; *** Load Float 17.0 ***
+>e5b7	00 00 00 88				.dword 	$88000000
+>e5bb	85 00					.byte 	$85,$0
+>e5bd	01					.byte 	1     ; *** Load Float 9.295606 ***
+>e5be	5b cd ba 94				.dword 	$94bacd5b
+>e5c2	84 00					.byte 	$84,$0
+>e5c4	2a					.byte 	$2a   ; *** Command * ***
+>e5c5	01					.byte 	1     ; *** Load Float 158.02530199999998 ***
+>e5c6	31 7a 06 9e				.dword 	$9e067a31
+>e5ca	88 00					.byte 	$88,$0
+>e5cc	3d					.byte 	$3d   ; *** Command = ***
+>e5cd	01					.byte 	1     ; *** Load Float 1.5018249511718752e-05 ***
+>e5ce	f7 e3 f6 fb				.dword 	$fbf6e3f7
+>e5d2	70 00					.byte 	$70,$0
+>e5d4	01					.byte 	1     ; *** Load Float 9.868548 ***
+>e5d5	96 92 e5 9d				.dword 	$9de59296
+>e5d9	84 00					.byte 	$84,$0
+>e5db	2a					.byte 	$2a   ; *** Command * ***
+>e5dc	01					.byte 	1     ; *** Load Float 0.00014820831618237308 ***
+>e5dd	ef 5d 68 9b				.dword 	$9b685def
+>e5e1	74 00					.byte 	$74,$0
+>e5e3	3d					.byte 	$3d   ; *** Command = ***
+>e5e4	01					.byte 	1     ; *** Load Float 9.0 ***
+>e5e5	00 00 00 90				.dword 	$90000000
+>e5e9	84 00					.byte 	$84,$0
+>e5eb	01					.byte 	1     ; *** Load Float 9.0 ***
+>e5ec	00 00 00 90				.dword 	$90000000
+>e5f0	84 00					.byte 	$84,$0
+>e5f2	2a					.byte 	$2a   ; *** Command * ***
+>e5f3	01					.byte 	1     ; *** Load Float 81.0 ***
+>e5f4	00 00 00 a2				.dword 	$a2000000
+>e5f8	87 00					.byte 	$87,$0
+>e5fa	3d					.byte 	$3d   ; *** Command = ***
+>e5fb	01					.byte 	1     ; *** Load Float 8.630839 ***
+>e5fc	a2 ea 17 8a				.dword 	$8a17eaa2
+>e600	84 00					.byte 	$84,$0
+>e602	01					.byte 	1     ; *** Load Float 234479.41939199998 ***
+>e603	d7 da fb e4				.dword 	$e4fbdad7
+>e607	92 00					.byte 	$92,$0
+>e609	2a					.byte 	$2a   ; *** Command * ***
+>e60a	01					.byte 	1     ; *** Load Float 2023754.1175858297 ***
+>e60b	f0 50 0a f7				.dword 	$f70a50f0
+>e60f	95 00					.byte 	$95,$0
+>e611	3d					.byte 	$3d   ; *** Command = ***
+>e612	01					.byte 	1     ; *** Load Float 6.496585 ***
+>e613	39 06 e4 cf				.dword 	$cfe40639
+>e617	83 00					.byte 	$83,$0
+>e619	01					.byte 	1     ; *** Load Float -937707.9623680001 ***
+>e61a	65 bf ee e4				.dword 	$e4eebf65
+>e61e	94 80					.byte 	$94,$80
+>e620	2f					.byte 	$2f   ; *** Command / ***
+>e621	01					.byte 	1     ; *** Load Float -6.928153818374466e-06 ***
+>e622	5d 63 78 e8				.dword 	$e878635d
+>e626	6f 80					.byte 	$6f,$80
+>e628	3d					.byte 	$3d   ; *** Command = ***
+>e629	01					.byte 	1     ; *** Load Float 1.817094162106514e-09 ***
+>e62a	2e 51 bd f9				.dword 	$f9bd512e
+>e62e	63 00					.byte 	$63,$0
+>e630	01					.byte 	1     ; *** Load Float 321657218485962.44 ***
+>e631	1f d4 45 92				.dword 	$9245d41f
+>e635	b1 00					.byte 	$b1,$0
+>e637	2a					.byte 	$2a   ; *** Command * ***
+>e638	01					.byte 	1     ; *** Load Float 584481.4539102619 ***
+>e639	43 17 b2 8e				.dword 	$8eb21743
+>e63d	94 00					.byte 	$94,$0
+>e63f	3d					.byte 	$3d   ; *** Command = ***
+>e640	01					.byte 	1     ; *** Load Float 487.53 ***
+>e641	0a d7 c3 f3				.dword 	$f3c3d70a
+>e645	89 00					.byte 	$89,$0
+>e647	01					.byte 	1     ; *** Load Float -9.0 ***
+>e648	00 00 00 90				.dword 	$90000000
+>e64c	84 80					.byte 	$84,$80
+>e64e	2f					.byte 	$2f   ; *** Command / ***
+>e64f	01					.byte 	1     ; *** Load Float -54.169999999999995 ***
+>e650	7a 14 ae d8				.dword 	$d8ae147a
+>e654	86 80					.byte 	$86,$80
+>e656	3d					.byte 	$3d   ; *** Command = ***
+>e657	01					.byte 	1     ; *** Load Float 5.0 ***
+>e658	00 00 00 a0				.dword 	$a0000000
+>e65c	83 00					.byte 	$83,$0
+>e65e	01					.byte 	1     ; *** Load Float 755.49 ***
+>e65f	28 5c df bc				.dword 	$bcdf5c28
+>e663	8a 00					.byte 	$8a,$0
+>e665	7e					.byte 	$7e   ; *** Command ~ ***
+>e666	01					.byte 	1     ; *** Load Float -1 ***
+>e667	00 00 00 80				.dword 	$80000000
+>e66b	81 80					.byte 	$81,$80
+>e66d	3d					.byte 	$3d   ; *** Command = ***
+>e66e	01					.byte 	1     ; *** Load Float 5.926742553710937e-06 ***
+>e66f	b4 54 de c6				.dword 	$c6de54b4
+>e673	6f 00					.byte 	$6f,$0
+>e675	01					.byte 	1     ; *** Load Float 14966728199147.355 ***
+>e676	48 68 cb d9				.dword 	$d9cb6848
+>e67a	ac 00					.byte 	$ac,$0
+>e67c	2f					.byte 	$2f   ; *** Command / ***
+>e67d	01					.byte 	1     ; *** Load Float 3.9599453366491814e-19 ***
+>e67e	84 00 c1 e9				.dword 	$e9c10084
+>e682	43 00					.byte 	$43,$0
+>e684	3d					.byte 	$3d   ; *** Command = ***
+>e685	01					.byte 	1     ; *** Load Float -10.0 ***
+>e686	00 00 00 a0				.dword 	$a0000000
+>e68a	84 80					.byte 	$84,$80
+>e68c	01					.byte 	1     ; *** Load Float 3.141517 ***
+>e68d	51 9d 0e c9				.dword 	$c90e9d51
+>e691	82 00					.byte 	$82,$0
+>e693	7e					.byte 	$7e   ; *** Command ~ ***
+>e694	01					.byte 	1     ; *** Load Float -1 ***
+>e695	00 00 00 80				.dword 	$80000000
+>e699	81 80					.byte 	$81,$80
+>e69b	3d					.byte 	$3d   ; *** Command = ***
+>e69c	01					.byte 	1     ; *** Load Float 12.0 ***
+>e69d	00 00 00 c0				.dword 	$c0000000
+>e6a1	84 00					.byte 	$84,$0
+>e6a3	01					.byte 	1     ; *** Load Float 677.04 ***
+>e6a4	5c 8f 42 a9				.dword 	$a9428f5c
+>e6a8	8a 00					.byte 	$8a,$0
+>e6aa	2a					.byte 	$2a   ; *** Command * ***
+>e6ab	01					.byte 	1     ; *** Load Float 8124.48 ***
+>e6ac	0a d7 e3 fd				.dword 	$fde3d70a
+>e6b0	8d 00					.byte 	$8d,$0
+>e6b2	3d					.byte 	$3d   ; *** Command = ***
+>e6b3	01					.byte 	1     ; *** Load Float 4.423587 ***
+>e6b4	53 06 8e 8d				.dword 	$8d8e0653
+>e6b8	83 00					.byte 	$83,$0
+>e6ba	01					.byte 	1     ; *** Load Float -33.69 ***
+>e6bb	5c 8f c2 86				.dword 	$86c28f5c
+>e6bf	86 80					.byte 	$86,$80
+>e6c1	7e					.byte 	$7e   ; *** Command ~ ***
+>e6c2	01					.byte 	1     ; *** Load Float 1 ***
+>e6c3	00 00 00 80				.dword 	$80000000
+>e6c7	81 00					.byte 	$81,$0
+>e6c9	3d					.byte 	$3d   ; *** Command = ***
+>e6ca	01					.byte 	1     ; *** Load Float -1.8821720004780217e-13 ***
+>e6cb	14 ea e9 d3				.dword 	$d3e9ea14
+>e6cf	56 80					.byte 	$56,$80
+>e6d1	01					.byte 	1     ; *** Load Float 17.0 ***
+>e6d2	00 00 00 88				.dword 	$88000000
+>e6d6	85 00					.byte 	$85,$0
+>e6d8	7e					.byte 	$7e   ; *** Command ~ ***
+>e6d9	01					.byte 	1     ; *** Load Float -1 ***
+>e6da	00 00 00 80				.dword 	$80000000
+>e6de	81 80					.byte 	$81,$80
+>e6e0	3d					.byte 	$3d   ; *** Command = ***
+>e6e1	01					.byte 	1     ; *** Load Float 10.0 ***
+>e6e2	00 00 00 a0				.dword 	$a0000000
+>e6e6	84 00					.byte 	$84,$0
+>e6e8	01					.byte 	1     ; *** Load Float -9.0 ***
+>e6e9	00 00 00 90				.dword 	$90000000
+>e6ed	84 80					.byte 	$84,$80
+>e6ef	2b					.byte 	$2b   ; *** Command + ***
+>e6f0	01					.byte 	1     ; *** Load Float 1.0 ***
+>e6f1	00 00 00 80				.dword 	$80000000
+>e6f5	81 00					.byte 	$81,$0
+>e6f7	3d					.byte 	$3d   ; *** Command = ***
+>e6f8	01					.byte 	1     ; *** Load Float 9.817292 ***
+>e6f9	c6 a0 13 9d				.dword 	$9d13a0c6
+>e6fd	84 00					.byte 	$84,$0
+>e6ff	01					.byte 	1     ; *** Load Float -3.0 ***
+>e700	00 00 00 c0				.dword 	$c0000000
+>e704	82 80					.byte 	$82,$80
+>e706	2f					.byte 	$2f   ; *** Command / ***
+>e707	01					.byte 	1     ; *** Load Float -3.2724306666666667 ***
+>e708	08 81 6f d1				.dword 	$d16f8108
+>e70c	82 80					.byte 	$82,$80
+>e70e	3d					.byte 	$3d   ; *** Command = ***
+>e70f	01					.byte 	1     ; *** Load Float 672.09 ***
+>e710	8f c2 05 a8				.dword 	$a805c28f
+>e714	8a 00					.byte 	$8a,$0
+>e716	01					.byte 	1     ; *** Load Float 1.658935 ***
+>e717	69 fb 57 d4				.dword 	$d457fb69
+>e71b	81 00					.byte 	$81,$0
+>e71d	2a					.byte 	$2a   ; *** Command * ***
+>e71e	01					.byte 	1     ; *** Load Float 1114.95362415 ***
+>e71f	16 84 5e 8b				.dword 	$8b5e8416
+>e723	8b 00					.byte 	$8b,$0
+>e725	3d					.byte 	$3d   ; *** Command = ***
+>e726	01					.byte 	1     ; *** Load Float 1.0109511094924529e-13 ***
+>e727	1c 5d a5 e3				.dword 	$e3a55d1c
+>e72b	55 00					.byte 	$55,$0
+>e72d	01					.byte 	1     ; *** Load Float 866818889.613312 ***
+>e72e	26 6d aa ce				.dword 	$ceaa6d26
+>e732	9e 00					.byte 	$9e,$0
+>e734	2a					.byte 	$2a   ; *** Command * ***
+>e735	01					.byte 	1     ; *** Load Float 8.763115181835939e-05 ***
+>e736	cc 9d c6 b7				.dword 	$b7c69dcc
+>e73a	73 00					.byte 	$73,$0
+>e73c	3d					.byte 	$3d   ; *** Command = ***
+>e73d	01					.byte 	1     ; *** Load Float 737.38 ***
+>e73e	eb 51 58 b8				.dword 	$b85851eb
+>e742	8a 00					.byte 	$8a,$0
+>e744	01					.byte 	1     ; *** Load Float -53328729.86624 ***
+>e745	77 d6 6e cb				.dword 	$cb6ed677
+>e749	9a 80					.byte 	$9a,$80
+>e74b	7e					.byte 	$7e   ; *** Command ~ ***
+>e74c	01					.byte 	1     ; *** Load Float 1 ***
+>e74d	00 00 00 80				.dword 	$80000000
+>e751	81 00					.byte 	$81,$0
+>e753	3d					.byte 	$3d   ; *** Command = ***
+>e754	01					.byte 	1     ; *** Load Float -18.0 ***
+>e755	00 00 00 90				.dword 	$90000000
+>e759	85 80					.byte 	$85,$80
+>e75b	01					.byte 	1     ; *** Load Float 5.814967 ***
+>e75c	ac 35 14 ba				.dword 	$ba1435ac
+>e760	83 00					.byte 	$83,$0
+>e762	2d					.byte 	$2d   ; *** Command - ***
+>e763	01					.byte 	1     ; *** Load Float -23.814967 ***
+>e764	6b 0d 85 be				.dword 	$be850d6b
+>e768	85 80					.byte 	$85,$80
+>e76a	3d					.byte 	$3d   ; *** Command = ***
+>e76b	01					.byte 	1     ; *** Load Float -653.09 ***
+>e76c	8f c2 45 a3				.dword 	$a345c28f
+>e770	8a 80					.byte 	$8a,$80
+>e772	01					.byte 	1     ; *** Load Float -87.82 ***
+>e773	0a d7 a3 af				.dword 	$afa3d70a
+>e777	87 80					.byte 	$87,$80
+>e779	7e					.byte 	$7e   ; *** Command ~ ***
+>e77a	01					.byte 	1     ; *** Load Float -1 ***
+>e77b	00 00 00 80				.dword 	$80000000
+>e77f	81 80					.byte 	$81,$80
+>e781	3d					.byte 	$3d   ; *** Command = ***
+>e782	01					.byte 	1     ; *** Load Float -32015491.530752 ***
+>e783	c3 41 42 f4				.dword 	$f44241c3
+>e787	99 80					.byte 	$99,$80
+>e789	01					.byte 	1     ; *** Load Float 0.0 ***
+>e78a	00 00 00 00				.dword 	$0
+>e78e	80 40					.byte 	$80,$40
+>e790	2a					.byte 	$2a   ; *** Command * ***
+>e791	01					.byte 	1     ; *** Load Float -0.0 ***
+>e792	00 00 00 00				.dword 	$0
+>e796	80 40					.byte 	$80,$40
+>e798	3d					.byte 	$3d   ; *** Command = ***
+>e799	01					.byte 	1     ; *** Load Float 18.0 ***
+>e79a	00 00 00 90				.dword 	$90000000
+>e79e	85 00					.byte 	$85,$0
+>e7a0	01					.byte 	1     ; *** Load Float 6.928781 ***
+>e7a1	ee 92 b8 dd				.dword 	$ddb892ee
+>e7a5	83 00					.byte 	$83,$0
+>e7a7	7e					.byte 	$7e   ; *** Command ~ ***
+>e7a8	01					.byte 	1     ; *** Load Float 1 ***
+>e7a9	00 00 00 80				.dword 	$80000000
+>e7ad	81 00					.byte 	$81,$0
+>e7af	3d					.byte 	$3d   ; *** Command = ***
+>e7b0	01					.byte 	1     ; *** Load Float 14.0 ***
+>e7b1	00 00 00 e0				.dword 	$e0000000
+>e7b5	84 00					.byte 	$84,$0
+>e7b7	01					.byte 	1     ; *** Load Float -9312.239615999999 ***
+>e7b8	5d f5 80 91				.dword 	$9180f55d
+>e7bc	8e 80					.byte 	$8e,$80
+>e7be	2f					.byte 	$2f   ; *** Command / ***
+>e7bf	01					.byte 	1     ; *** Load Float -0.0015033977407481695 ***
+>e7c0	42 a8 0d c5				.dword 	$c50da842
+>e7c4	77 80					.byte 	$77,$80
+>e7c6	3d					.byte 	$3d   ; *** Command = ***
+>e7c7	01					.byte 	1     ; *** Load Float -1.132577017415315e-11 ***
+>e7c8	fd bb 3e c7				.dword 	$c73ebbfd
+>e7cc	5c 80					.byte 	$5c,$80
+>e7ce	01					.byte 	1     ; *** Load Float 6.779812 ***
+>e7cf	4b 38 f4 d8				.dword 	$d8f4384b
+>e7d3	83 00					.byte 	$83,$0
+>e7d5	2a					.byte 	$2a   ; *** Command * ***
+>e7d6	01					.byte 	1     ; *** Load Float -7.678659253596561e-11 ***
+>e7d7	39 02 db a8				.dword 	$a8db0239
+>e7db	5f 80					.byte 	$5f,$80
+>e7dd	3d					.byte 	$3d   ; *** Command = ***
+>e7de	01					.byte 	1     ; *** Load Float 1.520676 ***
+>e7df	db 82 a5 c2				.dword 	$c2a582db
+>e7e3	81 00					.byte 	$81,$0
+>e7e5	01					.byte 	1     ; *** Load Float -258863.26784 ***
+>e7e6	24 d1 cb fc				.dword 	$fccbd124
+>e7ea	92 80					.byte 	$92,$80
+>e7ec	7e					.byte 	$7e   ; *** Command ~ ***
+>e7ed	01					.byte 	1     ; *** Load Float 1 ***
+>e7ee	00 00 00 80				.dword 	$80000000
+>e7f2	81 00					.byte 	$81,$0
+>e7f4	3d					.byte 	$3d   ; *** Command = ***
+>e7f5	01					.byte 	1     ; *** Load Float 8.0 ***
+>e7f6	00 00 00 80				.dword 	$80000000
+>e7fa	84 00					.byte 	$84,$0
+>e7fc	01					.byte 	1     ; *** Load Float -4.1763996705412866e-11 ***
+>e7fd	7a 14 ae b7				.dword 	$b7ae147a
+>e801	5e 80					.byte 	$5e,$80
+>e803	2d					.byte 	$2d   ; *** Command - ***
+>e804	01					.byte 	1     ; *** Load Float 8.000000000041764 ***
+>e805	00 00 00 80				.dword 	$80000000
+>e809	84 00					.byte 	$84,$0
+>e80b	3d					.byte 	$3d   ; *** Command = ***
+>e80c	01					.byte 	1     ; *** Load Float 0.836381 ***
+>e80d	b1 10 1d d6				.dword 	$d61d10b1
+>e811	80 00					.byte 	$80,$0
+>e813	01					.byte 	1     ; *** Load Float 189337826448.3758 ***
+>e814	d2 a7 55 b0				.dword 	$b055a7d2
+>e818	a6 00					.byte 	$a6,$0
+>e81a	7e					.byte 	$7e   ; *** Command ~ ***
+>e81b	01					.byte 	1     ; *** Load Float -1 ***
+>e81c	00 00 00 80				.dword 	$80000000
+>e820	81 80					.byte 	$81,$80
+>e822	3d					.byte 	$3d   ; *** Command = ***
+>e823	01					.byte 	1     ; *** Load Float -1.4106124877929688e-05 ***
+>e824	53 58 a9 ec				.dword 	$eca95853
+>e828	70 80					.byte 	$70,$80
+>e82a	01					.byte 	1     ; *** Load Float -805.08 ***
+>e82b	b8 1e 45 c9				.dword 	$c9451eb8
+>e82f	8a 80					.byte 	$8a,$80
+>e831	7e					.byte 	$7e   ; *** Command ~ ***
+>e832	01					.byte 	1     ; *** Load Float 1 ***
+>e833	00 00 00 80				.dword 	$80000000
+>e837	81 00					.byte 	$81,$0
+>e839	3d					.byte 	$3d   ; *** Command = ***
+>e83a	01					.byte 	1     ; *** Load Float -325.84 ***
+>e83b	1e 85 eb a2				.dword 	$a2eb851e
+>e83f	89 80					.byte 	$89,$80
+>e841	01					.byte 	1     ; *** Load Float -325.84 ***
+>e842	1e 85 eb a2				.dword 	$a2eb851e
+>e846	89 80					.byte 	$89,$80
+>e848	2a					.byte 	$2a   ; *** Command * ***
+>e849	01					.byte 	1     ; *** Load Float 106171.70559999999 ***
+>e84a	51 da 5d cf				.dword 	$cf5dda51
+>e84e	91 00					.byte 	$91,$0
+>e850	3d					.byte 	$3d   ; *** Command = ***
+>e851	01					.byte 	1     ; *** Load Float 5.262509 ***
+>e852	46 79 66 a8				.dword 	$a8667946
+>e856	83 00					.byte 	$83,$0
+>e858	01					.byte 	1     ; *** Load Float 5.098982 ***
+>e859	4c dc 2a a3				.dword 	$a32adc4c
+>e85d	83 00					.byte 	$83,$0
+>e85f	2b					.byte 	$2b   ; *** Command + ***
+>e860	01					.byte 	1     ; *** Load Float 10.361491000000001 ***
+>e861	c9 aa c8 a5				.dword 	$a5c8aac9
+>e865	84 00					.byte 	$84,$0
+>e867	3d					.byte 	$3d   ; *** Command = ***
+>e868	01					.byte 	1     ; *** Load Float -159.81 ***
+>e869	28 5c cf 9f				.dword 	$9fcf5c28
+>e86d	88 80					.byte 	$88,$80
+>e86f	01					.byte 	1     ; *** Load Float 7753.760768 ***
+>e870	0d 16 4e f2				.dword 	$f24e160d
+>e874	8d 00					.byte 	$8d,$0
+>e876	2d					.byte 	$2d   ; *** Command - ***
+>e877	01					.byte 	1     ; *** Load Float -7913.5707680000005 ***
+>e878	ee 90 4c f7				.dword 	$f74c90ee
+>e87c	8d 80					.byte 	$8d,$80
+>e87e	3d					.byte 	$3d   ; *** Command = ***
+>e87f	01					.byte 	1     ; *** Load Float 6.10732 ***
+>e880	5a 2a 6f c3				.dword 	$c36f2a5a
+>e884	83 00					.byte 	$83,$0
+>e886	01					.byte 	1     ; *** Load Float 45576.093695999996 ***
+>e887	fc 17 08 b2				.dword 	$b20817fc
+>e88b	90 00					.byte 	$90,$0
+>e88d	2a					.byte 	$2a   ; *** Command * ***
+>e88e	01					.byte 	1     ; *** Load Float 278347.78855145467 ***
+>e88f	3b 79 e9 87				.dword 	$87e9793b
+>e893	93 00					.byte 	$93,$0
+>e895	3d					.byte 	$3d   ; *** Command = ***
+>e896	01					.byte 	1     ; *** Load Float 3.610687 ***
+>e897	ed 7e 15 e7				.dword 	$e7157eed
+>e89b	82 00					.byte 	$82,$0
+>e89d	01					.byte 	1     ; *** Load Float 894.36 ***
+>e89e	3d 0a 97 df				.dword 	$df970a3d
+>e8a2	8a 00					.byte 	$8a,$0
+>e8a4	2a					.byte 	$2a   ; *** Command * ***
+>e8a5	01					.byte 	1     ; *** Load Float 3229.25402532 ***
+>e8a6	7c 10 d4 c9				.dword 	$c9d4107c
+>e8aa	8c 00					.byte 	$8c,$0
+>e8ac	3d					.byte 	$3d   ; *** Command = ***
+>e8ad	01					.byte 	1     ; *** Load Float 9.642219 ***
+>e8ae	6e 87 46 9a				.dword 	$9a46876e
+>e8b2	84 00					.byte 	$84,$0
+>e8b4	01					.byte 	1     ; *** Load Float 8.0 ***
+>e8b5	00 00 00 80				.dword 	$80000000
+>e8b9	84 00					.byte 	$84,$0
+>e8bb	2b					.byte 	$2b   ; *** Command + ***
+>e8bc	01					.byte 	1     ; *** Load Float 17.642219 ***
+>e8bd	b7 43 23 8d				.dword 	$8d2343b7
+>e8c1	85 00					.byte 	$85,$0
+>e8c3	3d					.byte 	$3d   ; *** Command = ***
+>e8c4	01					.byte 	1     ; *** Load Float 4.0 ***
+>e8c5	00 00 00 80				.dword 	$80000000
+>e8c9	83 00					.byte 	$83,$0
+>e8cb	01					.byte 	1     ; *** Load Float 18.0 ***
+>e8cc	00 00 00 90				.dword 	$90000000
+>e8d0	85 00					.byte 	$85,$0
+>e8d2	7e					.byte 	$7e   ; *** Command ~ ***
+>e8d3	01					.byte 	1     ; *** Load Float -1 ***
+>e8d4	00 00 00 80				.dword 	$80000000
+>e8d8	81 80					.byte 	$81,$80
+>e8da	3d					.byte 	$3d   ; *** Command = ***
+>e8db	01					.byte 	1     ; *** Load Float -19.0 ***
+>e8dc	00 00 00 98				.dword 	$98000000
+>e8e0	85 80					.byte 	$85,$80
+>e8e2	01					.byte 	1     ; *** Load Float 859.38 ***
+>e8e3	eb 51 d8 d6				.dword 	$d6d851eb
+>e8e7	8a 00					.byte 	$8a,$0
+>e8e9	2d					.byte 	$2d   ; *** Command - ***
+>e8ea	01					.byte 	1     ; *** Load Float -878.38 ***
+>e8eb	eb 51 98 db				.dword 	$db9851eb
+>e8ef	8a 80					.byte 	$8a,$80
+>e8f1	3d					.byte 	$3d   ; *** Command = ***
+>e8f2	01					.byte 	1     ; *** Load Float -154.36 ***
+>e8f3	f5 28 5c 9a				.dword 	$9a5c28f5
+>e8f7	88 80					.byte 	$88,$80
+>e8f9	01					.byte 	1     ; *** Load Float -8.0 ***
+>e8fa	00 00 00 80				.dword 	$80000000
+>e8fe	84 80					.byte 	$84,$80
+>e900	2b					.byte 	$2b   ; *** Command + ***
+>e901	01					.byte 	1     ; *** Load Float -162.36 ***
+>e902	f5 28 5c a2				.dword 	$a25c28f5
+>e906	88 80					.byte 	$88,$80
+>e908	3d					.byte 	$3d   ; *** Command = ***
+>e909	01					.byte 	1     ; *** Load Float -2.4429755285382272e-11 ***
+>e90a	1c eb e2 d6				.dword 	$d6e2eb1c
+>e90e	5d 80					.byte 	$5d,$80
+>e910	01					.byte 	1     ; *** Load Float 220.33 ***
+>e911	e1 7a 54 dc				.dword 	$dc547ae1
+>e915	88 00					.byte 	$88,$0
+>e917	2b					.byte 	$2b   ; *** Command + ***
+>e918	01					.byte 	1     ; *** Load Float 220.32999999997557 ***
+>e919	e1 7a 54 dc				.dword 	$dc547ae1
+>e91d	88 00					.byte 	$88,$0
+>e91f	3d					.byte 	$3d   ; *** Command = ***
+>e920	01					.byte 	1     ; *** Load Float -761.44 ***
+>e921	f5 28 5c be				.dword 	$be5c28f5
+>e925	8a 80					.byte 	$8a,$80
+>e927	01					.byte 	1     ; *** Load Float 56573.034496 ***
+>e928	d4 08 fd dc				.dword 	$dcfd08d4
+>e92c	90 00					.byte 	$90,$0
+>e92e	2d					.byte 	$2d   ; *** Command - ***
+>e92f	01					.byte 	1     ; *** Load Float -57334.474496 ***
+>e930	78 79 f6 df				.dword 	$dff67978
+>e934	90 80					.byte 	$90,$80
+>e936	3d					.byte 	$3d   ; *** Command = ***
+>e937	01					.byte 	1     ; *** Load Float -17.0 ***
+>e938	00 00 00 88				.dword 	$88000000
+>e93c	85 80					.byte 	$85,$80
+>e93e	01					.byte 	1     ; *** Load Float 1370.5154559999999 ***
+>e93f	9d 7e 50 ab				.dword 	$ab507e9d
+>e943	8b 00					.byte 	$8b,$0
+>e945	2f					.byte 	$2f   ; *** Command / ***
+>e946	01					.byte 	1     ; *** Load Float -0.012404092143270219 ***
+>e947	85 88 3a cb				.dword 	$cb3a8885
+>e94b	7a 80					.byte 	$7a,$80
+>e94d	3d					.byte 	$3d   ; *** Command = ***
+>e94e	01					.byte 	1     ; *** Load Float -19.0 ***
+>e94f	00 00 00 98				.dword 	$98000000
+>e953	85 80					.byte 	$85,$80
+>e955	01					.byte 	1     ; *** Load Float 7.194752 ***
+>e956	8b 68 3b e6				.dword 	$e63b688b
+>e95a	83 00					.byte 	$83,$0
+>e95c	2b					.byte 	$2b   ; *** Command + ***
+>e95d	01					.byte 	1     ; *** Load Float -11.805247999999999 ***
+>e95e	ba 4b e2 bc				.dword 	$bce24bba
+>e962	84 80					.byte 	$84,$80
+>e964	3d					.byte 	$3d   ; *** Command = ***
+>e965	01					.byte 	1     ; *** Load Float -9.0 ***
+>e966	00 00 00 90				.dword 	$90000000
+>e96a	84 80					.byte 	$84,$80
+>e96c	01					.byte 	1     ; *** Load Float 478.96166400000004 ***
+>e96d	ce 17 7b ef				.dword 	$ef7b17ce
+>e971	89 00					.byte 	$89,$0
+>e973	2a					.byte 	$2a   ; *** Command * ***
+>e974	01					.byte 	1     ; *** Load Float -4310.654976000001 ***
+>e975	64 3d b5 86				.dword 	$86b53d64
+>e979	8d 80					.byte 	$8d,$80
+>e97b	3d					.byte 	$3d   ; *** Command = ***
+>e97c	01					.byte 	1     ; *** Load Float 0.0 ***
+>e97d	00 00 00 00				.dword 	$0
+>e981	80 40					.byte 	$80,$40
+>e983	01					.byte 	1     ; *** Load Float -864.5959680000001 ***
+>e984	56 24 26 d8				.dword 	$d8262456
+>e988	8a 80					.byte 	$8a,$80
+>e98a	2f					.byte 	$2f   ; *** Command / ***
+>e98b	01					.byte 	1     ; *** Load Float -0.0 ***
+>e98c	00 00 00 00				.dword 	$0
+>e990	80 40					.byte 	$80,$40
+>e992	3d					.byte 	$3d   ; *** Command = ***
+>e993	01					.byte 	1     ; *** Load Float 1.83072 ***
+>e994	70 08 55 ea				.dword 	$ea550870
+>e998	81 00					.byte 	$81,$0
+>e99a	01					.byte 	1     ; *** Load Float -20.0 ***
+>e99b	00 00 00 a0				.dword 	$a0000000
+>e99f	85 80					.byte 	$85,$80
+>e9a1	2b					.byte 	$2b   ; *** Command + ***
+>e9a2	01					.byte 	1     ; *** Load Float -18.16928 ***
+>e9a3	78 af 5a 91				.dword 	$915aaf78
+>e9a7	85 80					.byte 	$85,$80
+>e9a9	3d					.byte 	$3d   ; *** Command = ***
+>e9aa	01					.byte 	1     ; *** Load Float 7.0 ***
+>e9ab	00 00 00 e0				.dword 	$e0000000
+>e9af	83 00					.byte 	$83,$0
+>e9b1	01					.byte 	1     ; *** Load Float 8.28253 ***
+>e9b2	2d 3e 85 84				.dword 	$84853e2d
+>e9b6	84 00					.byte 	$84,$0
+>e9b8	2f					.byte 	$2f   ; *** Command / ***
+>e9b9	01					.byte 	1     ; *** Load Float 0.8451523870121811 ***
+>e9ba	26 e8 5b d8				.dword 	$d85be826
+>e9be	80 00					.byte 	$80,$0
+>e9c0	3d					.byte 	$3d   ; *** Command = ***
+>e9c1	01					.byte 	1     ; *** Load Float -491694.587904 ***
+>e9c2	d0 d2 15 f0				.dword 	$f015d2d0
+>e9c6	93 80					.byte 	$93,$80
+>e9c8	01					.byte 	1     ; *** Load Float -491694.587904 ***
+>e9c9	d0 d2 15 f0				.dword 	$f015d2d0
+>e9cd	93 80					.byte 	$93,$80
+>e9cf	2a					.byte 	$2a   ; *** Command * ***
+>e9d0	01					.byte 	1     ; *** Load Float 241763567774.0844 ***
+>e9d1	22 ed 28 e1				.dword 	$e128ed22
+>e9d5	a6 00					.byte 	$a6,$0
+>e9d7	3d					.byte 	$3d   ; *** Command = ***
+>e9d8	01					.byte 	1     ; *** Load Float 17.0 ***
+>e9d9	00 00 00 88				.dword 	$88000000
+>e9dd	85 00					.byte 	$85,$0
+>e9df	01					.byte 	1     ; *** Load Float 19.0 ***
+>e9e0	00 00 00 98				.dword 	$98000000
+>e9e4	85 00					.byte 	$85,$0
+>e9e6	2a					.byte 	$2a   ; *** Command * ***
+>e9e7	01					.byte 	1     ; *** Load Float 323.0 ***
+>e9e8	00 00 80 a1				.dword 	$a1800000
+>e9ec	89 00					.byte 	$89,$0
+>e9ee	3d					.byte 	$3d   ; *** Command = ***
+>e9ef	01					.byte 	1     ; *** Load Float 2.0191771909594535e-10 ***
+>e9f0	08 c9 02 de				.dword 	$de02c908
+>e9f4	60 00					.byte 	$60,$0
+>e9f6	01					.byte 	1     ; *** Load Float 9.207502 ***
+>e9f7	9d ed 51 93				.dword 	$9351ed9d
+>e9fb	84 00					.byte 	$84,$0
+>e9fd	7e					.byte 	$7e   ; *** Command ~ ***
+>e9fe	01					.byte 	1     ; *** Load Float -1 ***
+>e9ff	00 00 00 80				.dword 	$80000000
+>ea03	81 80					.byte 	$81,$80
+>ea05	3d					.byte 	$3d   ; *** Command = ***
+>ea06	01					.byte 	1     ; *** Load Float -201.75 ***
+>ea07	00 00 c0 c9				.dword 	$c9c00000
+>ea0b	88 80					.byte 	$88,$80
+>ea0d	01					.byte 	1     ; *** Load Float 16.0 ***
+>ea0e	00 00 00 80				.dword 	$80000000
+>ea12	85 00					.byte 	$85,$0
+>ea14	2a					.byte 	$2a   ; *** Command * ***
+>ea15	01					.byte 	1     ; *** Load Float -3228.0 ***
+>ea16	00 00 c0 c9				.dword 	$c9c00000
+>ea1a	8c 80					.byte 	$8c,$80
+>ea1c	3d					.byte 	$3d   ; *** Command = ***
+>ea1d	01					.byte 	1     ; *** Load Float 3.304549 ***
+>ea1e	16 bb 7d d3				.dword 	$d37dbb16
+>ea22	82 00					.byte 	$82,$0
+>ea24	01					.byte 	1     ; *** Load Float 16.09 ***
+>ea25	eb 51 b8 80				.dword 	$80b851eb
+>ea29	85 00					.byte 	$85,$0
+>ea2b	7e					.byte 	$7e   ; *** Command ~ ***
+>ea2c	01					.byte 	1     ; *** Load Float -1 ***
+>ea2d	00 00 00 80				.dword 	$80000000
+>ea31	81 80					.byte 	$81,$80
+>ea33	3d					.byte 	$3d   ; *** Command = ***
+>ea34	01					.byte 	1     ; *** Load Float 12533985880.047615 ***
+>ea35	96 5c c5 ba				.dword 	$bac55c96
+>ea39	a2 00					.byte 	$a2,$0
+>ea3b	01					.byte 	1     ; *** Load Float -14.0 ***
+>ea3c	00 00 00 e0				.dword 	$e0000000
+>ea40	84 80					.byte 	$84,$80
+>ea42	2d					.byte 	$2d   ; *** Command - ***
+>ea43	01					.byte 	1     ; *** Load Float 12533985894.047615 ***
+>ea44	99 5c c5 ba				.dword 	$bac55c99
+>ea48	a2 00					.byte 	$a2,$0
+>ea4a	3d					.byte 	$3d   ; *** Command = ***
+>ea4b	01					.byte 	1     ; *** Load Float -16.0 ***
+>ea4c	00 00 00 80				.dword 	$80000000
+>ea50	85 80					.byte 	$85,$80
+>ea52	01					.byte 	1     ; *** Load Float 6.702142 ***
+>ea53	7f f2 77 d6				.dword 	$d677f27f
+>ea57	83 00					.byte 	$83,$0
+>ea59	2d					.byte 	$2d   ; *** Command - ***
+>ea5a	01					.byte 	1     ; *** Load Float -22.702142000000002 ***
+>ea5b	9f fc 9d b5				.dword 	$b59dfc9f
+>ea5f	85 80					.byte 	$85,$80
+>ea61	3d					.byte 	$3d   ; *** Command = ***
+>ea62	01					.byte 	1     ; *** Load Float 945.66 ***
+>ea63	70 3d 6a ec				.dword 	$ec6a3d70
+>ea67	8a 00					.byte 	$8a,$0
+>ea69	01					.byte 	1     ; *** Load Float 917.12 ***
+>ea6a	14 ae 47 e5				.dword 	$e547ae14
+>ea6e	8a 00					.byte 	$8a,$0
+>ea70	7e					.byte 	$7e   ; *** Command ~ ***
+>ea71	01					.byte 	1     ; *** Load Float 1 ***
+>ea72	00 00 00 80				.dword 	$80000000
+>ea76	81 00					.byte 	$81,$0
+>ea78	3d					.byte 	$3d   ; *** Command = ***
+>ea79	01					.byte 	1     ; *** Load Float 4.0 ***
+>ea7a	00 00 00 80				.dword 	$80000000
+>ea7e	83 00					.byte 	$83,$0
+>ea80	01					.byte 	1     ; *** Load Float 7.68829345703125e-06 ***
+>ea81	0d f8 fc 80				.dword 	$80fcf80d
+>ea85	70 00					.byte 	$70,$0
+>ea87	2d					.byte 	$2d   ; *** Command - ***
+>ea88	01					.byte 	1     ; *** Load Float 3.999992311706543 ***
+>ea89	c0 df ff ff				.dword 	$ffffdfc0
+>ea8d	82 00					.byte 	$82,$0
+>ea8f	3d					.byte 	$3d   ; *** Command = ***
+>ea90	01					.byte 	1     ; *** Load Float -237.6 ***
+>ea91	99 99 99 ed				.dword 	$ed999999
+>ea95	88 80					.byte 	$88,$80
+>ea97	01					.byte 	1     ; *** Load Float -9.63970947265625e-06 ***
+>ea98	a7 3c ba a1				.dword 	$a1ba3ca7
+>ea9c	70 80					.byte 	$70,$80
+>ea9e	2a					.byte 	$2a   ; *** Command * ***
+>ea9f	01					.byte 	1     ; *** Load Float 0.002290394970703125 ***
+>eaa0	7e 73 1a 96				.dword 	$961a737e
+>eaa4	78 00					.byte 	$78,$0
+>eaa6	3d					.byte 	$3d   ; *** Command = ***
+>eaa7	01					.byte 	1     ; *** Load Float 10.0 ***
+>eaa8	00 00 00 a0				.dword 	$a0000000
+>eaac	84 00					.byte 	$84,$0
+>eaae	01					.byte 	1     ; *** Load Float 1.745065 ***
+>eaaf	38 4a 5e df				.dword 	$df5e4a38
+>eab3	81 00					.byte 	$81,$0
+>eab5	2f					.byte 	$2f   ; *** Command / ***
+>eab6	01					.byte 	1     ; *** Load Float 5.730445570795357 ***
+>eab7	63 cf 5f b7				.dword 	$b75fcf63
+>eabb	83 00					.byte 	$83,$0
+>eabd	3d					.byte 	$3d   ; *** Command = ***
+>eabe	01					.byte 	1     ; *** Load Float -13.0 ***
+>eabf	00 00 00 d0				.dword 	$d0000000
+>eac3	84 80					.byte 	$84,$80
+>eac5	01					.byte 	1     ; *** Load Float -6.0 ***
+>eac6	00 00 00 c0				.dword 	$c0000000
+>eaca	83 80					.byte 	$83,$80
+>eacc	7e					.byte 	$7e   ; *** Command ~ ***
+>eacd	01					.byte 	1     ; *** Load Float -1 ***
+>eace	00 00 00 80				.dword 	$80000000
+>ead2	81 80					.byte 	$81,$80
+>ead4	3d					.byte 	$3d   ; *** Command = ***
+>ead5	01					.byte 	1     ; *** Load Float -2.7267305995337666e-12 ***
+>ead6	61 69 e0 bf				.dword 	$bfe06961
+>eada	5a 80					.byte 	$5a,$80
+>eadc	01					.byte 	1     ; *** Load Float -842.35 ***
+>eadd	66 66 96 d2				.dword 	$d2966666
+>eae1	8a 80					.byte 	$8a,$80
+>eae3	2d					.byte 	$2d   ; *** Command - ***
+>eae4	01					.byte 	1     ; *** Load Float 842.3499999999973 ***
+>eae5	66 66 96 d2				.dword 	$d2966666
+>eae9	8a 00					.byte 	$8a,$0
+>eaeb	3d					.byte 	$3d   ; *** Command = ***
+>eaec	01					.byte 	1     ; *** Load Float 223.31 ***
+>eaed	28 5c 4f df				.dword 	$df4f5c28
+>eaf1	88 00					.byte 	$88,$0
+>eaf3	01					.byte 	1     ; *** Load Float 223.31 ***
+>eaf4	28 5c 4f df				.dword 	$df4f5c28
+>eaf8	88 00					.byte 	$88,$0
+>eafa	2a					.byte 	$2a   ; *** Command * ***
+>eafb	01					.byte 	1     ; *** Load Float 49867.356100000005 ***
+>eafc	29 5b cb c2				.dword 	$c2cb5b29
+>eb00	90 00					.byte 	$90,$0
+>eb02	3d					.byte 	$3d   ; *** Command = ***
+>eb03	01					.byte 	1     ; *** Load Float 1.404404 ***
+>eb04	a1 82 c3 b3				.dword 	$b3c382a1
+>eb08	81 00					.byte 	$81,$0
+>eb0a	01					.byte 	1     ; *** Load Float -11.0 ***
+>eb0b	00 00 00 b0				.dword 	$b0000000
+>eb0f	84 80					.byte 	$84,$80
+>eb11	7e					.byte 	$7e   ; *** Command ~ ***
+>eb12	01					.byte 	1     ; *** Load Float 1 ***
+>eb13	00 00 00 80				.dword 	$80000000
+>eb17	81 00					.byte 	$81,$0
+>eb19	3d					.byte 	$3d   ; *** Command = ***
+>eb1a	01					.byte 	1     ; *** Load Float 8.381134 ***
+>eb1b	f7 1f 19 86				.dword 	$86191ff7
+>eb1f	84 00					.byte 	$84,$0
+>eb21	01					.byte 	1     ; *** Load Float -13020909277332.635 ***
+>eb22	c1 aa 7a bd				.dword 	$bd7aaac1
+>eb26	ac 80					.byte 	$ac,$80
+>eb28	2d					.byte 	$2d   ; *** Command - ***
+>eb29	01					.byte 	1     ; *** Load Float 13020909277341.016 ***
+>eb2a	c1 aa 7a bd				.dword 	$bd7aaac1
+>eb2e	ac 00					.byte 	$ac,$0
+>eb30	3d					.byte 	$3d   ; *** Command = ***
+>eb31	01					.byte 	1     ; *** Load Float 4.345937 ***
+>eb32	78 ea 11 8b				.dword 	$8b11ea78
+>eb36	83 00					.byte 	$83,$0
+>eb38	01					.byte 	1     ; *** Load Float 655761928945.1396 ***
+>eb39	f2 74 ae 98				.dword 	$98ae74f2
+>eb3d	a8 00					.byte 	$a8,$0
+>eb3f	2f					.byte 	$2f   ; *** Command / ***
+>eb40	01					.byte 	1     ; *** Load Float 6.627309101324143e-12 ***
+>eb41	5c 7e 2d e9				.dword 	$e92d7e5c
+>eb45	5b 00					.byte 	$5b,$0
+>eb47	3d					.byte 	$3d   ; *** Command = ***
+>eb48	01					.byte 	1     ; *** Load Float 16.0 ***
+>eb49	00 00 00 80				.dword 	$80000000
+>eb4d	85 00					.byte 	$85,$0
+>eb4f	01					.byte 	1     ; *** Load Float -7.830667495727539e-07 ***
+>eb50	f1 ef 33 d2				.dword 	$d233eff1
+>eb54	6c 80					.byte 	$6c,$80
+>eb56	2d					.byte 	$2d   ; *** Command - ***
+>eb57	01					.byte 	1     ; *** Load Float 16.00000078306675 ***
+>eb58	69 00 00 80				.dword 	$80000069
+>eb5c	85 00					.byte 	$85,$0
+>eb5e	3d					.byte 	$3d   ; *** Command = ***
+>eb5f	01					.byte 	1     ; *** Load Float -1.8768453598022463e-07 ***
+>eb60	19 55 86 c9				.dword 	$c9865519
+>eb64	6a 80					.byte 	$6a,$80
+>eb66	01					.byte 	1     ; *** Load Float -1142411908.612096 ***
+>eb67	09 a5 2f 88				.dword 	$882fa509
+>eb6b	9f 80					.byte 	$9f,$80
+>eb6d	7e					.byte 	$7e   ; *** Command ~ ***
+>eb6e	01					.byte 	1     ; *** Load Float 1 ***
+>eb6f	00 00 00 80				.dword 	$80000000
+>eb73	81 00					.byte 	$81,$0
+>eb75	3d					.byte 	$3d   ; *** Command = ***
+>eb76	01					.byte 	1     ; *** Load Float -2.0172130632545306e-16 ***
+>eb77	f9 9e 91 e8				.dword 	$e8919ef9
+>eb7b	4c 80					.byte 	$4c,$80
+>eb7d	01					.byte 	1     ; *** Load Float 1.250733 ***
+>eb7e	d9 04 18 a0				.dword 	$a01804d9
+>eb82	81 00					.byte 	$81,$0
+>eb84	2b					.byte 	$2b   ; *** Command + ***
+>eb85	01					.byte 	1     ; *** Load Float 1.2507329999999999 ***
+>eb86	d9 04 18 a0				.dword 	$a01804d9
+>eb8a	81 00					.byte 	$81,$0
+>eb8c	3d					.byte 	$3d   ; *** Command = ***
+>eb8d	01					.byte 	1     ; *** Load Float -1108460843185538.6 ***
+>eb8e	b3 e9 08 fc				.dword 	$fc08e9b3
+>eb92	b2 80					.byte 	$b2,$80
+>eb94	01					.byte 	1     ; *** Load Float -4.6733475755900144e-14 ***
+>eb95	78 07 78 d2				.dword 	$d2780778
+>eb99	54 80					.byte 	$54,$80
+>eb9b	2a					.byte 	$2a   ; *** Command * ***
+>eb9c	01					.byte 	1     ; *** Load Float 51.802227941376 ***
+>eb9d	3d 7b 35 cf				.dword 	$cf357b3d
+>eba1	86 00					.byte 	$86,$0
+>eba3	3d					.byte 	$3d   ; *** Command = ***
+>eba4	01					.byte 	1     ; *** Load Float -499.02 ***
+>eba5	5c 8f 82 f9				.dword 	$f9828f5c
+>eba9	89 80					.byte 	$89,$80
+>ebab	01					.byte 	1     ; *** Load Float 951.04 ***
+>ebac	5c 8f c2 ed				.dword 	$edc28f5c
+>ebb0	8a 00					.byte 	$8a,$0
+>ebb2	2a					.byte 	$2a   ; *** Command * ***
+>ebb3	01					.byte 	1     ; *** Load Float -474587.98079999996 ***
+>ebb4	62 7f bb e7				.dword 	$e7bb7f62
+>ebb8	93 80					.byte 	$93,$80
+>ebba	3d					.byte 	$3d   ; *** Command = ***
+>ebbb	01					.byte 	1     ; *** Load Float -11.0 ***
+>ebbc	00 00 00 b0				.dword 	$b0000000
+>ebc0	84 80					.byte 	$84,$80
+>ebc2	01					.byte 	1     ; *** Load Float 1.0 ***
+>ebc3	00 00 00 80				.dword 	$80000000
+>ebc7	81 00					.byte 	$81,$0
+>ebc9	2b					.byte 	$2b   ; *** Command + ***
+>ebca	01					.byte 	1     ; *** Load Float -10.0 ***
+>ebcb	00 00 00 a0				.dword 	$a0000000
+>ebcf	84 80					.byte 	$84,$80
+>ebd1	3d					.byte 	$3d   ; *** Command = ***
+>ebd2	01					.byte 	1     ; *** Load Float 292.57 ***
+>ebd3	c2 f5 48 92				.dword 	$9248f5c2
+>ebd7	89 00					.byte 	$89,$0
+>ebd9	01					.byte 	1     ; *** Load Float 217.6 ***
+>ebda	99 99 99 d9				.dword 	$d9999999
+>ebde	88 00					.byte 	$88,$0
+>ebe0	7e					.byte 	$7e   ; *** Command ~ ***
+>ebe1	01					.byte 	1     ; *** Load Float 1 ***
+>ebe2	00 00 00 80				.dword 	$80000000
+>ebe6	81 00					.byte 	$81,$0
+>ebe8	3d					.byte 	$3d   ; *** Command = ***
+>ebe9	01					.byte 	1     ; *** Load Float 13.0 ***
+>ebea	00 00 00 d0				.dword 	$d0000000
+>ebee	84 00					.byte 	$84,$0
+>ebf0	01					.byte 	1     ; *** Load Float 3.963962 ***
+>ebf1	ac 8d b1 fd				.dword 	$fdb18dac
+>ebf5	82 00					.byte 	$82,$0
+>ebf7	2b					.byte 	$2b   ; *** Command + ***
+>ebf8	01					.byte 	1     ; *** Load Float 16.963962 ***
+>ebf9	b5 31 b6 87				.dword 	$87b631b5
+>ebfd	85 00					.byte 	$85,$0
+>ebff	3d					.byte 	$3d   ; *** Command = ***
+>ec00	01					.byte 	1     ; *** Load Float -3.0 ***
+>ec01	00 00 00 c0				.dword 	$c0000000
+>ec05	82 80					.byte 	$82,$80
+>ec07	01					.byte 	1     ; *** Load Float 941.6 ***
+>ec08	66 66 66 eb				.dword 	$eb666666
+>ec0c	8a 00					.byte 	$8a,$0
+>ec0e	2b					.byte 	$2b   ; *** Command + ***
+>ec0f	01					.byte 	1     ; *** Load Float 938.6 ***
+>ec10	66 66 a6 ea				.dword 	$eaa66666
+>ec14	8a 00					.byte 	$8a,$0
+>ec16	3d					.byte 	$3d   ; *** Command = ***
+>ec17	01					.byte 	1     ; *** Load Float 16.0 ***
+>ec18	00 00 00 80				.dword 	$80000000
+>ec1c	85 00					.byte 	$85,$0
+>ec1e	01					.byte 	1     ; *** Load Float 16.0 ***
+>ec1f	00 00 00 80				.dword 	$80000000
+>ec23	85 00					.byte 	$85,$0
+>ec25	2b					.byte 	$2b   ; *** Command + ***
+>ec26	01					.byte 	1     ; *** Load Float 32.0 ***
+>ec27	00 00 00 80				.dword 	$80000000
+>ec2b	86 00					.byte 	$86,$0
+>ec2d	3d					.byte 	$3d   ; *** Command = ***
+>ec2e	01					.byte 	1     ; *** Load Float 8.4552978515625e-05 ***
+>ec2f	e1 08 52 b1				.dword 	$b15208e1
+>ec33	73 00					.byte 	$73,$0
+>ec35	01					.byte 	1     ; *** Load Float -483.37 ***
+>ec36	28 5c af f1				.dword 	$f1af5c28
+>ec3a	89 80					.byte 	$89,$80
+>ec3c	2f					.byte 	$2f   ; *** Command / ***
+>ec3d	01					.byte 	1     ; *** Load Float -1.7492392683787783e-07 ***
+>ec3e	0e b9 d2 bb				.dword 	$bbd2b90e
+>ec42	6a 80					.byte 	$6a,$80
+>ec44	3d					.byte 	$3d   ; *** Command = ***
+>ec45	01					.byte 	1     ; *** Load Float 0.380461 ***
+>ec46	c0 c8 cb c2				.dword 	$c2cbc8c0
+>ec4a	7f 00					.byte 	$7f,$0
+>ec4c	01					.byte 	1     ; *** Load Float -1163265710000.9636 ***
+>ec4d	0b 05 6c 87				.dword 	$876c050b
+>ec51	a9 80					.byte 	$a9,$80
+>ec53	2f					.byte 	$2f   ; *** Command / ***
+>ec54	01					.byte 	1     ; *** Load Float -3.2706285135808294e-13 ***
+>ec55	6e b9 1e b8				.dword 	$b81eb96e
+>ec59	57 80					.byte 	$57,$80
+>ec5b	3d					.byte 	$3d   ; *** Command = ***
+>ec5c	01					.byte 	1     ; *** Load Float 3.121194 ***
+>ec5d	7a a4 c1 c7				.dword 	$c7c1a47a
+>ec61	82 00					.byte 	$82,$0
+>ec63	01					.byte 	1     ; *** Load Float -764.76 ***
+>ec64	d7 a3 30 bf				.dword 	$bf30a3d7
+>ec68	8a 80					.byte 	$8a,$80
+>ec6a	2a					.byte 	$2a   ; *** Command * ***
+>ec6b	01					.byte 	1     ; *** Load Float -2386.96432344 ***
+>ec6c	de 6d 2f 95				.dword 	$952f6dde
+>ec70	8c 80					.byte 	$8c,$80
+>ec72	3d					.byte 	$3d   ; *** Command = ***
+>ec73	01					.byte 	1     ; *** Load Float -898.75 ***
+>ec74	00 00 b0 e0				.dword 	$e0b00000
+>ec78	8a 80					.byte 	$8a,$80
+>ec7a	01					.byte 	1     ; *** Load Float -407884825801458.2 ***
+>ec7b	13 0b 7c b9				.dword 	$b97c0b13
+>ec7f	b1 80					.byte 	$b1,$80
+>ec81	2d					.byte 	$2d   ; *** Command - ***
+>ec82	01					.byte 	1     ; *** Load Float 407884825800559.44 ***
+>ec83	13 0b 7c b9				.dword 	$b97c0b13
+>ec87	b1 00					.byte 	$b1,$0
+>ec89	3d					.byte 	$3d   ; *** Command = ***
+>ec8a	01					.byte 	1     ; *** Load Float 14.0 ***
+>ec8b	00 00 00 e0				.dword 	$e0000000
+>ec8f	84 00					.byte 	$84,$0
+>ec91	01					.byte 	1     ; *** Load Float 5.0 ***
+>ec92	00 00 00 a0				.dword 	$a0000000
+>ec96	83 00					.byte 	$83,$0
+>ec98	7e					.byte 	$7e   ; *** Command ~ ***
+>ec99	01					.byte 	1     ; *** Load Float 1 ***
+>ec9a	00 00 00 80				.dword 	$80000000
+>ec9e	81 00					.byte 	$81,$0
+>eca0	3d					.byte 	$3d   ; *** Command = ***
+>eca1	01					.byte 	1     ; *** Load Float 246.82 ***
+>eca2	85 eb d1 f6				.dword 	$f6d1eb85
+>eca6	88 00					.byte 	$88,$0
+>eca8	01					.byte 	1     ; *** Load Float 8.013703336473554e-13 ***
+>eca9	73 d1 90 e1				.dword 	$e190d173
+>ecad	58 00					.byte 	$58,$0
+>ecaf	2f					.byte 	$2f   ; *** Command / ***
+>ecb0	01					.byte 	1     ; *** Load Float 307997425954893.94 ***
+>ecb1	95 9e 0f 8c				.dword 	$8c0f9e95
+>ecb5	b1 00					.byte 	$b1,$0
+>ecb7	3d					.byte 	$3d   ; *** Command = ***
+>ecb8	01					.byte 	1     ; *** Load Float 3.0 ***
+>ecb9	00 00 00 c0				.dword 	$c0000000
+>ecbd	82 00					.byte 	$82,$0
+>ecbf	01					.byte 	1     ; *** Load Float 203738405115.265 ***
+>ecc0	63 05 bf bd				.dword 	$bdbf0563
+>ecc4	a6 00					.byte 	$a6,$0
+>ecc6	2a					.byte 	$2a   ; *** Command * ***
+>ecc7	01					.byte 	1     ; *** Load Float 611215215345.795 ***
+>ecc8	0a 44 4f 8e				.dword 	$8e4f440a
+>eccc	a8 00					.byte 	$a8,$0
+>ecce	3d					.byte 	$3d   ; *** Command = ***
+>eccf	01					.byte 	1     ; *** Load Float -1.1661541066132486e-12 ***
+>ecd0	2d 21 1f a4				.dword 	$a41f212d
+>ecd4	59 80					.byte 	$59,$80
+>ecd6	01					.byte 	1     ; *** Load Float 0.609409 ***
+>ecd7	6c 3a 02 9c				.dword 	$9c023a6c
+>ecdb	80 00					.byte 	$80,$0
+>ecdd	2b					.byte 	$2b   ; *** Command + ***
+>ecde	01					.byte 	1     ; *** Load Float 0.6094089999988338 ***
+>ecdf	6c 3a 02 9c				.dword 	$9c023a6c
+>ece3	80 00					.byte 	$80,$0
+>ece5	3d					.byte 	$3d   ; *** Command = ***
+>ece6	01					.byte 	1     ; *** Load Float 6.041389 ***
+>ece7	06 0f 53 c1				.dword 	$c1530f06
+>eceb	83 00					.byte 	$83,$0
+>eced	01					.byte 	1     ; *** Load Float 71188962259798.84 ***
+>ecee	9d f1 7d 81				.dword 	$817df19d
+>ecf2	af 00					.byte 	$af,$0
+>ecf4	2a					.byte 	$2a   ; *** Command * ***
+>ecf5	01					.byte 	1     ; *** Load Float 430080213517763.9 ***
+>ecf6	2d ed 93 c3				.dword 	$c393ed2d
+>ecfa	b1 00					.byte 	$b1,$0
+>ecfc	3d					.byte 	$3d   ; *** Command = ***
+>ecfd	01					.byte 	1     ; *** Load Float 2.586457270581377e-15 ***
+>ecfe	1f b7 5f ba				.dword 	$ba5fb71f
+>ed02	50 00					.byte 	$50,$0
+>ed04	01					.byte 	1     ; *** Load Float 3.71792702935636e-11 ***
+>ed05	0f 23 84 a3				.dword 	$a384230f
+>ed09	5e 00					.byte 	$5e,$0
+>ed0b	2a					.byte 	$2a   ; *** Command * ***
+>ed0c	01					.byte 	1     ; *** Load Float 9.616259396569779e-26 ***
+>ed0d	f4 48 16 ee				.dword 	$ee1648f4
+>ed11	2d 00					.byte 	$2d,$0
+>ed13	3d					.byte 	$3d   ; *** Command = ***
+>ed14	01					.byte 	1     ; *** Load Float -19.0 ***
+>ed15	00 00 00 98				.dword 	$98000000
+>ed19	85 80					.byte 	$85,$80
+>ed1b	01					.byte 	1     ; *** Load Float 19.0 ***
+>ed1c	00 00 00 98				.dword 	$98000000
+>ed20	85 00					.byte 	$85,$0
+>ed22	2b					.byte 	$2b   ; *** Command + ***
+>ed23	01					.byte 	1     ; *** Load Float 0.0 ***
+>ed24	00 00 00 00				.dword 	$0
+>ed28	80 40					.byte 	$80,$40
+>ed2a	3d					.byte 	$3d   ; *** Command = ***
+>ed2b	01					.byte 	1     ; *** Load Float 337.3 ***
+>ed2c	66 66 a6 a8				.dword 	$a8a66666
+>ed30	89 00					.byte 	$89,$0
+>ed32	01					.byte 	1     ; *** Load Float -13.0 ***
+>ed33	00 00 00 d0				.dword 	$d0000000
+>ed37	84 80					.byte 	$84,$80
+>ed39	2d					.byte 	$2d   ; *** Command - ***
+>ed3a	01					.byte 	1     ; *** Load Float 350.3 ***
+>ed3b	66 66 26 af				.dword 	$af266666
+>ed3f	89 00					.byte 	$89,$0
+>ed41	3d					.byte 	$3d   ; *** Command = ***
+>ed42	01					.byte 	1     ; *** Load Float -8.376218829653227e-15 ***
+>ed43	c3 7d e4 96				.dword 	$96e47dc3
+>ed47	52 80					.byte 	$52,$80
+>ed49	01					.byte 	1     ; *** Load Float -5.941975116729736e-08 ***
+>ed4a	13 b5 34 ff				.dword 	$ff34b513
+>ed4e	68 80					.byte 	$68,$80
+>ed50	7e					.byte 	$7e   ; *** Command ~ ***
+>ed51	01					.byte 	1     ; *** Load Float 1 ***
+>ed52	00 00 00 80				.dword 	$80000000
+>ed56	81 00					.byte 	$81,$0
+>ed58	3d					.byte 	$3d   ; *** Command = ***
+>ed59	01					.byte 	1     ; *** Load Float 539.2 ***
+>ed5a	cc cc cc 86				.dword 	$86cccccc
+>ed5e	8a 00					.byte 	$8a,$0
+>ed60	01					.byte 	1     ; *** Load Float 376126392.23808 ***
+>ed61	c1 dd 59 b3				.dword 	$b359ddc1
+>ed65	9d 00					.byte 	$9d,$0
+>ed67	7e					.byte 	$7e   ; *** Command ~ ***
+>ed68	01					.byte 	1     ; *** Load Float -1 ***
+>ed69	00 00 00 80				.dword 	$80000000
+>ed6d	81 80					.byte 	$81,$80
+>ed6f	3d					.byte 	$3d   ; *** Command = ***
+>ed70	01					.byte 	1     ; *** Load Float 15.0 ***
+>ed71	00 00 00 f0				.dword 	$f0000000
+>ed75	84 00					.byte 	$84,$0
+>ed77	01					.byte 	1     ; *** Load Float 17.0 ***
+>ed78	00 00 00 88				.dword 	$88000000
+>ed7c	85 00					.byte 	$85,$0
+>ed7e	2a					.byte 	$2a   ; *** Command * ***
+>ed7f	01					.byte 	1     ; *** Load Float 255.0 ***
+>ed80	00 00 00 ff				.dword 	$ff000000
+>ed84	88 00					.byte 	$88,$0
+>ed86	3d					.byte 	$3d   ; *** Command = ***
+>ed87	01					.byte 	1     ; *** Load Float 4.158243536949158e-09 ***
+>ed88	05 4c e0 8e				.dword 	$8ee04c05
+>ed8c	65 00					.byte 	$65,$0
+>ed8e	01					.byte 	1     ; *** Load Float 1.190604 ***
+>ed8f	3d b6 65 98				.dword 	$9865b63d
+>ed93	81 00					.byte 	$81,$0
+>ed95	2a					.byte 	$2a   ; *** Command * ***
+>ed96	01					.byte 	1     ; *** Load Float 4.950821388065815e-09 ***
+>ed97	ad e2 1b aa				.dword 	$aa1be2ad
+>ed9b	65 00					.byte 	$65,$0
+>ed9d	3d					.byte 	$3d   ; *** Command = ***
+>ed9e	01					.byte 	1     ; *** Load Float -443.21 ***
+>ed9f	47 e1 9a dd				.dword 	$dd9ae147
+>eda3	89 80					.byte 	$89,$80
+>eda5	01					.byte 	1     ; *** Load Float -3.962362825404853e-12 ***
+>eda6	9e ca 69 8b				.dword 	$8b69ca9e
+>edaa	5b 80					.byte 	$5b,$80
+>edac	2f					.byte 	$2f   ; *** Command / ***
+>edad	01					.byte 	1     ; *** Load Float 111854976318256.56 ***
+>edae	42 88 76 cb				.dword 	$cb768842
+>edb2	af 00					.byte 	$af,$0
+>edb4	3d					.byte 	$3d   ; *** Command = ***
+>edb5	01					.byte 	1     ; *** Load Float -5.026038252253784e-15 ***
+>edb6	4a 05 15 b5				.dword 	$b515054a
+>edba	51 80					.byte 	$51,$80
+>edbc	01					.byte 	1     ; *** Load Float -1247857736595.5378 ***
+>edbd	fd 0e 45 91				.dword 	$91450efd
+>edc1	a9 80					.byte 	$a9,$80
+>edc3	7e					.byte 	$7e   ; *** Command ~ ***
+>edc4	01					.byte 	1     ; *** Load Float 1 ***
+>edc5	00 00 00 80				.dword 	$80000000
+>edc9	81 00					.byte 	$81,$0
+>edcb	3d					.byte 	$3d   ; *** Command = ***
+>edcc	01					.byte 	1     ; *** Load Float 0.082103 ***
+>edcd	1f 9e 25 a8				.dword 	$a8259e1f
+>edd1	7d 00					.byte 	$7d,$0
+>edd3	01					.byte 	1     ; *** Load Float -17.0 ***
+>edd4	00 00 00 88				.dword 	$88000000
+>edd8	85 80					.byte 	$85,$80
+>edda	2a					.byte 	$2a   ; *** Command * ***
+>eddb	01					.byte 	1     ; *** Load Float -1.395751 ***
+>eddc	01 f8 a7 b2				.dword 	$b2a7f801
+>ede0	81 80					.byte 	$81,$80
+>ede2	3d					.byte 	$3d   ; *** Command = ***
+>ede3	01					.byte 	1     ; *** Load Float 126.14 ***
+>ede4	14 ae 47 fc				.dword 	$fc47ae14
+>ede8	87 00					.byte 	$87,$0
+>edea	01					.byte 	1     ; *** Load Float 1.2433019946911373e-13 ***
+>edeb	7b bd fb 8b				.dword 	$8bfbbd7b
+>edef	56 00					.byte 	$56,$0
+>edf1	7e					.byte 	$7e   ; *** Command ~ ***
+>edf2	01					.byte 	1     ; *** Load Float 1 ***
+>edf3	00 00 00 80				.dword 	$80000000
+>edf7	81 00					.byte 	$81,$0
+>edf9	3d					.byte 	$3d   ; *** Command = ***
+>edfa	01					.byte 	1     ; *** Load Float 1.286333 ***
+>edfb	4b 8f a6 a4				.dword 	$a4a68f4b
+>edff	81 00					.byte 	$81,$0
+>ee01	01					.byte 	1     ; *** Load Float 0.0 ***
+>ee02	00 00 00 00				.dword 	$0
+>ee06	80 40					.byte 	$80,$40
+>ee08	2d					.byte 	$2d   ; *** Command - ***
+>ee09	01					.byte 	1     ; *** Load Float 1.286333 ***
+>ee0a	4b 8f a6 a4				.dword 	$a4a68f4b
+>ee0e	81 00					.byte 	$81,$0
+>ee10	3d					.byte 	$3d   ; *** Command = ***
+>ee11	01					.byte 	1     ; *** Load Float 6.361007690429688e-10 ***
+>ee12	be 9c d9 ae				.dword 	$aed99cbe
+>ee16	62 00					.byte 	$62,$0
+>ee18	01					.byte 	1     ; *** Load Float 6.361007690429688e-10 ***
+>ee19	be 9c d9 ae				.dword 	$aed99cbe
+>ee1d	62 00					.byte 	$62,$0
+>ee1f	2f					.byte 	$2f   ; *** Command / ***
+>ee20	01					.byte 	1     ; *** Load Float 1.0 ***
+>ee21	00 00 00 80				.dword 	$80000000
+>ee25	81 00					.byte 	$81,$0
+>ee27	3d					.byte 	$3d   ; *** Command = ***
+>ee28	01					.byte 	1     ; *** Load Float 9.434051 ***
+>ee29	76 df f1 96				.dword 	$96f1df76
+>ee2d	84 00					.byte 	$84,$0
+>ee2f	01					.byte 	1     ; *** Load Float 4.871488 ***
+>ee30	cd 3a e3 9b				.dword 	$9be33acd
+>ee34	83 00					.byte 	$83,$0
+>ee36	2b					.byte 	$2b   ; *** Command + ***
+>ee37	01					.byte 	1     ; *** Load Float 14.305539 ***
+>ee38	dc 7c e3 e4				.dword 	$e4e37cdc
+>ee3c	84 00					.byte 	$84,$0
+>ee3e	3d					.byte 	$3d   ; *** Command = ***
+>ee3f	01					.byte 	1     ; *** Load Float -2.718821633607149e-12 ***
+>ee40	b6 ef 51 bf				.dword 	$bf51efb6
+>ee44	5a 80					.byte 	$5a,$80
+>ee46	01					.byte 	1     ; *** Load Float 20.0 ***
+>ee47	00 00 00 a0				.dword 	$a0000000
+>ee4b	85 00					.byte 	$85,$0
+>ee4d	2b					.byte 	$2b   ; *** Command + ***
+>ee4e	01					.byte 	1     ; *** Load Float 19.999999999997282 ***
+>ee4f	ff ff ff 9f				.dword 	$9fffffff
+>ee53	85 00					.byte 	$85,$0
+>ee55	3d					.byte 	$3d   ; *** Command = ***
+>ee56	01					.byte 	1     ; *** Load Float -555.88 ***
+>ee57	eb 51 f8 8a				.dword 	$8af851eb
+>ee5b	8a 80					.byte 	$8a,$80
+>ee5d	01					.byte 	1     ; *** Load Float -555.88 ***
+>ee5e	eb 51 f8 8a				.dword 	$8af851eb
+>ee62	8a 80					.byte 	$8a,$80
+>ee64	2a					.byte 	$2a   ; *** Command * ***
+>ee65	01					.byte 	1     ; *** Load Float 309002.5744 ***
+>ee66	61 52 e1 96				.dword 	$96e15261
+>ee6a	93 00					.byte 	$93,$0
+>ee6c	3d					.byte 	$3d   ; *** Command = ***
+>ee6d	01					.byte 	1     ; *** Load Float -9.0 ***
+>ee6e	00 00 00 90				.dword 	$90000000
+>ee72	84 80					.byte 	$84,$80
+>ee74	01					.byte 	1     ; *** Load Float -12.0 ***
+>ee75	00 00 00 c0				.dword 	$c0000000
+>ee79	84 80					.byte 	$84,$80
+>ee7b	2a					.byte 	$2a   ; *** Command * ***
+>ee7c	01					.byte 	1     ; *** Load Float 108.0 ***
+>ee7d	00 00 00 d8				.dword 	$d8000000
+>ee81	87 00					.byte 	$87,$0
+>ee83	3d					.byte 	$3d   ; *** Command = ***
+>ee84	01					.byte 	1     ; *** Load Float -301.72 ***
+>ee85	f5 28 dc 96				.dword 	$96dc28f5
+>ee89	89 80					.byte 	$89,$80
+>ee8b	01					.byte 	1     ; *** Load Float -24241856447344.805 ***
+>ee8c	f0 f9 61 b0				.dword 	$b061f9f0
+>ee90	ad 80					.byte 	$ad,$80
+>ee92	7e					.byte 	$7e   ; *** Command ~ ***
+>ee93	01					.byte 	1     ; *** Load Float 1 ***
+>ee94	00 00 00 80				.dword 	$80000000
+>ee98	81 00					.byte 	$81,$0
+>ee9a	3d					.byte 	$3d   ; *** Command = ***
+>ee9b	01					.byte 	1     ; *** Load Float 0.147095 ***
+>ee9c	59 12 a0 96				.dword 	$96a01259
+>eea0	7e 00					.byte 	$7e,$0
+>eea2	01					.byte 	1     ; *** Load Float 6.299646 ***
+>eea3	35 b3 96 c9				.dword 	$c996b335
+>eea7	83 00					.byte 	$83,$0
+>eea9	2a					.byte 	$2a   ; *** Command * ***
+>eeaa	01					.byte 	1     ; *** Load Float 0.92664642837 ***
+>eeab	48 b3 38 ed				.dword 	$ed38b348
+>eeaf	80 00					.byte 	$80,$0
+>eeb1	3d					.byte 	$3d   ; *** Command = ***
+>eeb2	01					.byte 	1     ; *** Load Float -19.0 ***
+>eeb3	00 00 00 98				.dword 	$98000000
+>eeb7	85 80					.byte 	$85,$80
+>eeb9	01					.byte 	1     ; *** Load Float -19.0 ***
+>eeba	00 00 00 98				.dword 	$98000000
+>eebe	85 80					.byte 	$85,$80
+>eec0	2b					.byte 	$2b   ; *** Command + ***
+>eec1	01					.byte 	1     ; *** Load Float -38.0 ***
+>eec2	00 00 00 98				.dword 	$98000000
+>eec6	86 80					.byte 	$86,$80
+>eec8	3d					.byte 	$3d   ; *** Command = ***
+>eec9	01					.byte 	1     ; *** Load Float -3.0 ***
+>eeca	00 00 00 c0				.dword 	$c0000000
+>eece	82 80					.byte 	$82,$80
+>eed0	01					.byte 	1     ; *** Load Float -16.0 ***
+>eed1	00 00 00 80				.dword 	$80000000
+>eed5	85 80					.byte 	$85,$80
+>eed7	2a					.byte 	$2a   ; *** Command * ***
+>eed8	01					.byte 	1     ; *** Load Float 48.0 ***
+>eed9	00 00 00 c0				.dword 	$c0000000
+>eedd	86 00					.byte 	$86,$0
+>eedf	3d					.byte 	$3d   ; *** Command = ***
+>eee0	01					.byte 	1     ; *** Load Float 25930.170368 ***
+>eee1	3a 57 94 ca				.dword 	$ca94573a
+>eee5	8f 00					.byte 	$8f,$0
+>eee7	01					.byte 	1     ; *** Load Float 0.0 ***
+>eee8	00 00 00 00				.dword 	$0
+>eeec	80 40					.byte 	$80,$40
+>eeee	2a					.byte 	$2a   ; *** Command * ***
+>eeef	01					.byte 	1     ; *** Load Float 0.0 ***
+>eef0	00 00 00 00				.dword 	$0
+>eef4	80 40					.byte 	$80,$40
+>eef6	3d					.byte 	$3d   ; *** Command = ***
+>eef7	01					.byte 	1     ; *** Load Float -0.925127 ***
+>eef8	81 1f d5 ec				.dword 	$ecd51f81
+>eefc	80 80					.byte 	$80,$80
+>eefe	01					.byte 	1     ; *** Load Float 0.063411 ***
+>eeff	59 a0 dd 81				.dword 	$81dda059
+>ef03	7d 00					.byte 	$7d,$0
+>ef05	7e					.byte 	$7e   ; *** Command ~ ***
+>ef06	01					.byte 	1     ; *** Load Float -1 ***
+>ef07	00 00 00 80				.dword 	$80000000
+>ef0b	81 80					.byte 	$81,$80
+>ef0d	3d					.byte 	$3d   ; *** Command = ***
+>ef0e	01					.byte 	1     ; *** Load Float 1077946906220.4293 ***
+>ef0f	76 a4 fa fa				.dword 	$fafaa476
+>ef13	a8 00					.byte 	$a8,$0
+>ef15	01					.byte 	1     ; *** Load Float 1077946906220.4293 ***
+>ef16	76 a4 fa fa				.dword 	$fafaa476
+>ef1a	a8 00					.byte 	$a8,$0
+>ef1c	2d					.byte 	$2d   ; *** Command - ***
+>ef1d	01					.byte 	1     ; *** Load Float 0.0 ***
+>ef1e	00 00 00 00				.dword 	$0
+>ef22	80 40					.byte 	$80,$40
+>ef24	3d					.byte 	$3d   ; *** Command = ***
+>ef25	01					.byte 	1     ; *** Load Float 3.7 ***
+>ef26	cc cc cc ec				.dword 	$eccccccc
+>ef2a	82 00					.byte 	$82,$0
+>ef2c	01					.byte 	1     ; *** Load Float 990.49 ***
+>ef2d	28 5c 9f f7				.dword 	$f79f5c28
+>ef31	8a 00					.byte 	$8a,$0
+>ef33	7e					.byte 	$7e   ; *** Command ~ ***
+>ef34	01					.byte 	1     ; *** Load Float -1 ***
+>ef35	00 00 00 80				.dword 	$80000000
+>ef39	81 80					.byte 	$81,$80
+>ef3b	3d					.byte 	$3d   ; *** Command = ***
+>ef3c	01					.byte 	1     ; *** Load Float 26219668.045824 ***
+>ef3d	05 4a 0a c8				.dword 	$c80a4a05
+>ef41	99 00					.byte 	$99,$0
+>ef43	01					.byte 	1     ; *** Load Float 9.291694 ***
+>ef44	53 c7 aa 94				.dword 	$94aac753
+>ef48	84 00					.byte 	$84,$0
+>ef4a	2f					.byte 	$2f   ; *** Command / ***
+>ef4b	01					.byte 	1     ; *** Load Float 2821839.38104548 ***
+>ef4c	86 3d 3b ac				.dword 	$ac3b3d86
+>ef50	96 00					.byte 	$96,$0
+>ef52	3d					.byte 	$3d   ; *** Command = ***
+>ef53	01					.byte 	1     ; *** Load Float 9.606788 ***
+>ef54	55 67 b5 99				.dword 	$99b56755
+>ef58	84 00					.byte 	$84,$0
+>ef5a	01					.byte 	1     ; *** Load Float 8.632249 ***
+>ef5b	20 b1 1d 8a				.dword 	$8a1db120
+>ef5f	84 00					.byte 	$84,$0
+>ef61	2a					.byte 	$2a   ; *** Command * ***
+>ef62	01					.byte 	1     ; *** Load Float 82.928186106212 ***
+>ef63	35 3b db a5				.dword 	$a5db3b35
+>ef67	87 00					.byte 	$87,$0
+>ef69	3d					.byte 	$3d   ; *** Command = ***
+>ef6a	01					.byte 	1     ; *** Load Float 573.5 ***
+>ef6b	00 00 60 8f				.dword 	$8f600000
+>ef6f	8a 00					.byte 	$8a,$0
+>ef71	01					.byte 	1     ; *** Load Float 96.02 ***
+>ef72	70 3d 0a c0				.dword 	$c00a3d70
+>ef76	87 00					.byte 	$87,$0
+>ef78	2a					.byte 	$2a   ; *** Command * ***
+>ef79	01					.byte 	1     ; *** Load Float 55067.47 ***
+>ef7a	51 78 1b d7				.dword 	$d71b7851
+>ef7e	90 00					.byte 	$90,$0
+>ef80	3d					.byte 	$3d   ; *** Command = ***
+>ef81	01					.byte 	1     ; *** Load Float -897.57 ***
+>ef82	e1 7a 64 e0				.dword 	$e0647ae1
+>ef86	8a 80					.byte 	$8a,$80
+>ef88	01					.byte 	1     ; *** Load Float 3885867606606.873 ***
+>ef89	88 f0 2f e2				.dword 	$e22ff088
+>ef8d	aa 00					.byte 	$aa,$0
+>ef8f	2d					.byte 	$2d   ; *** Command - ***
+>ef90	01					.byte 	1     ; *** Load Float -3885867607504.443 ***
+>ef91	89 f0 2f e2				.dword 	$e22ff089
+>ef95	aa 80					.byte 	$aa,$80
+>ef97	3d					.byte 	$3d   ; *** Command = ***
+>ef98	01					.byte 	1     ; *** Load Float -11.0 ***
+>ef99	00 00 00 b0				.dword 	$b0000000
+>ef9d	84 80					.byte 	$84,$80
+>ef9f	01					.byte 	1     ; *** Load Float 305.82 ***
+>efa0	c2 f5 e8 98				.dword 	$98e8f5c2
+>efa4	89 00					.byte 	$89,$0
+>efa6	2d					.byte 	$2d   ; *** Command - ***
+>efa7	01					.byte 	1     ; *** Load Float -316.82 ***
+>efa8	c2 f5 68 9e				.dword 	$9e68f5c2
+>efac	89 80					.byte 	$89,$80
+>efae	3d					.byte 	$3d   ; *** Command = ***
+>efaf	01					.byte 	1     ; *** Load Float 32781423786.065918 ***
+>efb0	95 9a 3d f4				.dword 	$f43d9a95
+>efb4	a3 00					.byte 	$a3,$0
+>efb6	01					.byte 	1     ; *** Load Float -14.0 ***
+>efb7	00 00 00 e0				.dword 	$e0000000
+>efbb	84 80					.byte 	$84,$80
+>efbd	2b					.byte 	$2b   ; *** Command + ***
+>efbe	01					.byte 	1     ; *** Load Float 32781423772.065918 ***
+>efbf	93 9a 3d f4				.dword 	$f43d9a93
+>efc3	a3 00					.byte 	$a3,$0
+>efc5	3d					.byte 	$3d   ; *** Command = ***
+>efc6	01					.byte 	1     ; *** Load Float -174.88 ***
+>efc7	ae 47 e1 ae				.dword 	$aee147ae
+>efcb	88 80					.byte 	$88,$80
+>efcd	01					.byte 	1     ; *** Load Float -6.111022949218749e-06 ***
+>efce	94 49 0d cd				.dword 	$cd0d4994
+>efd2	6f 80					.byte 	$6f,$80
+>efd4	2f					.byte 	$2f   ; *** Command / ***
+>efd5	01					.byte 	1     ; *** Load Float 28617140.117655285 ***
+>efd6	0f da 54 da				.dword 	$da54da0f
+>efda	99 00					.byte 	$99,$0
+>efdc	3d					.byte 	$3d   ; *** Command = ***
+>efdd	01					.byte 	1     ; *** Load Float 2.00553 ***
+>efde	80 9a 5a 80				.dword 	$805a9a80
+>efe2	82 00					.byte 	$82,$0
+>efe4	01					.byte 	1     ; *** Load Float 4.070846 ***
+>efe5	d4 5e 44 82				.dword 	$82445ed4
+>efe9	83 00					.byte 	$83,$0
+>efeb	7e					.byte 	$7e   ; *** Command ~ ***
+>efec	01					.byte 	1     ; *** Load Float -1 ***
+>efed	00 00 00 80				.dword 	$80000000
+>eff1	81 80					.byte 	$81,$80
+>eff3	3d					.byte 	$3d   ; *** Command = ***
+>eff4	01					.byte 	1     ; *** Load Float -9.0 ***
+>eff5	00 00 00 90				.dword 	$90000000
+>eff9	84 80					.byte 	$84,$80
+>effb	01					.byte 	1     ; *** Load Float 0.0 ***
+>effc	00 00 00 00				.dword 	$0
+>f000	80 40					.byte 	$80,$40
+>f002	2b					.byte 	$2b   ; *** Command + ***
+>f003	01					.byte 	1     ; *** Load Float -9.0 ***
+>f004	00 00 00 90				.dword 	$90000000
+>f008	84 80					.byte 	$84,$80
+>f00a	3d					.byte 	$3d   ; *** Command = ***
+>f00b	01					.byte 	1     ; *** Load Float 8.363034 ***
+>f00c	bd fc ce 85				.dword 	$85cefcbd
+>f010	84 00					.byte 	$84,$0
+>f012	01					.byte 	1     ; *** Load Float 7.407844 ***
+>f013	dc 0e 0d ed				.dword 	$ed0d0edc
+>f017	83 00					.byte 	$83,$0
+>f019	7e					.byte 	$7e   ; *** Command ~ ***
+>f01a	01					.byte 	1     ; *** Load Float 1 ***
+>f01b	00 00 00 80				.dword 	$80000000
+>f01f	81 00					.byte 	$81,$0
+>f021	3d					.byte 	$3d   ; *** Command = ***
+>f022	01					.byte 	1     ; *** Load Float -3.743577003479004e-07 ***
+>f023	9f 54 fb c8				.dword 	$c8fb549f
+>f027	6b 80					.byte 	$6b,$80
+>f029	01					.byte 	1     ; *** Load Float 5.0 ***
+>f02a	00 00 00 a0				.dword 	$a0000000
+>f02e	83 00					.byte 	$83,$0
+>f030	7e					.byte 	$7e   ; *** Command ~ ***
+>f031	01					.byte 	1     ; *** Load Float -1 ***
+>f032	00 00 00 80				.dword 	$80000000
+>f036	81 80					.byte 	$81,$80
+>f038	3d					.byte 	$3d   ; *** Command = ***
+>f039	01					.byte 	1     ; *** Load Float 2075.099136 ***
+>f03a	0f 96 b1 81				.dword 	$81b1960f
+>f03e	8c 00					.byte 	$8c,$0
+>f040	01					.byte 	1     ; *** Load Float -6899091866.910721 ***
+>f041	cd e4 9b cd				.dword 	$cd9be4cd
+>f045	a1 80					.byte 	$a1,$80
+>f047	2a					.byte 	$2a   ; *** Command * ***
+>f048	01					.byte 	1     ; *** Load Float -14316299572211.062 ***
+>f049	35 5f 54 d0				.dword 	$d0545f35
+>f04d	ac 80					.byte 	$ac,$80
+>f04f	3d					.byte 	$3d   ; *** Command = ***
+>f050	01					.byte 	1     ; *** Load Float -870.49 ***
+>f051	28 5c 9f d9				.dword 	$d99f5c28
+>f055	8a 80					.byte 	$8a,$80
+>f057	01					.byte 	1     ; *** Load Float 0.00042331249999999997 ***
+>f058	bf 0a f0 dd				.dword 	$ddf00abf
+>f05c	75 00					.byte 	$75,$0
+>f05e	2f					.byte 	$2f   ; *** Command / ***
+>f05f	01					.byte 	1     ; *** Load Float -2056376.790196368 ***
+>f060	52 c6 05 fb				.dword 	$fb05c652
+>f064	95 80					.byte 	$95,$80
+>f066	3d					.byte 	$3d   ; *** Command = ***
+>f067	01					.byte 	1     ; *** Load Float 3.829273 ***
+>f068	0f cf 12 f5				.dword 	$f512cf0f
+>f06c	82 00					.byte 	$82,$0
+>f06e	01					.byte 	1     ; *** Load Float -190.4 ***
+>f06f	66 66 66 be				.dword 	$be666666
+>f073	88 80					.byte 	$88,$80
+>f075	2f					.byte 	$2f   ; *** Command / ***
+>f076	01					.byte 	1     ; *** Load Float -0.02011172794117647 ***
+>f077	b8 59 c1 a4				.dword 	$a4c159b8
+>f07b	7b 80					.byte 	$7b,$80
+>f07d	3d					.byte 	$3d   ; *** Command = ***
+>f07e	01					.byte 	1     ; *** Load Float 32638328.897536002 ***
+>f07f	72 bc 02 f9				.dword 	$f902bc72
+>f083	99 00					.byte 	$99,$0
+>f085	01					.byte 	1     ; *** Load Float -6.002397537231445e-07 ***
+>f086	6b 29 20 a1				.dword 	$a120296b
+>f08a	6c 80					.byte 	$6c,$80
+>f08c	2d					.byte 	$2d   ; *** Command - ***
+>f08d	01					.byte 	1     ; *** Load Float 32638328.897536602 ***
+>f08e	72 bc 02 f9				.dword 	$f902bc72
+>f092	99 00					.byte 	$99,$0
+>f094	3d					.byte 	$3d   ; *** Command = ***
+>f095	01					.byte 	1     ; *** Load Float 9.303656 ***
+>f096	64 c6 db 94				.dword 	$94dbc664
+>f09a	84 00					.byte 	$84,$0
+>f09c	01					.byte 	1     ; *** Load Float -788.76 ***
+>f09d	d7 a3 30 c5				.dword 	$c530a3d7
+>f0a1	8a 80					.byte 	$8a,$80
+>f0a3	2a					.byte 	$2a   ; *** Command * ***
+>f0a4	01					.byte 	1     ; *** Load Float -7338.35170656 ***
+>f0a5	4b d0 52 e5				.dword 	$e552d04b
+>f0a9	8d 80					.byte 	$8d,$80
+>f0ab	3d					.byte 	$3d   ; *** Command = ***
+>f0ac	01					.byte 	1     ; *** Load Float 254.09 ***
+>f0ad	3d 0a 17 fe				.dword 	$fe170a3d
+>f0b1	88 00					.byte 	$88,$0
+>f0b3	01					.byte 	1     ; *** Load Float -144.09 ***
+>f0b4	3d 0a 17 90				.dword 	$90170a3d
+>f0b8	88 80					.byte 	$88,$80
+>f0ba	2a					.byte 	$2a   ; *** Command * ***
+>f0bb	01					.byte 	1     ; *** Load Float -36611.8281 ***
+>f0bc	fe d3 03 8f				.dword 	$8f03d3fe
+>f0c0	90 80					.byte 	$90,$80
+>f0c2	3d					.byte 	$3d   ; *** Command = ***
+>f0c3	01					.byte 	1     ; *** Load Float 0.873371 ***
+>f0c4	ea 3d 95 df				.dword 	$df953dea
+>f0c8	80 00					.byte 	$80,$0
+>f0ca	01					.byte 	1     ; *** Load Float 233.96 ***
+>f0cb	8f c2 f5 e9				.dword 	$e9f5c28f
+>f0cf	88 00					.byte 	$88,$0
+>f0d1	2f					.byte 	$2f   ; *** Command / ***
+>f0d2	01					.byte 	1     ; *** Load Float 0.003732992819285348 ***
+>f0d3	13 3a a5 f4				.dword 	$f4a53a13
+>f0d7	78 00					.byte 	$78,$0
+>f0d9	3d					.byte 	$3d   ; *** Command = ***
+>f0da	01					.byte 	1     ; *** Load Float 581.86 ***
+>f0db	3d 0a 77 91				.dword 	$91770a3d
+>f0df	8a 00					.byte 	$8a,$0
+>f0e1	01					.byte 	1     ; *** Load Float 4.146044375374913e-12 ***
+>f0e2	70 3f e0 91				.dword 	$91e03f70
+>f0e6	5b 00					.byte 	$5b,$0
+>f0e8	2b					.byte 	$2b   ; *** Command + ***
+>f0e9	01					.byte 	1     ; *** Load Float 581.8600000000041 ***
+>f0ea	3d 0a 77 91				.dword 	$91770a3d
+>f0ee	8a 00					.byte 	$8a,$0
+>f0f0	3d					.byte 	$3d   ; *** Command = ***
+>f0f1	01					.byte 	1     ; *** Load Float -0.251604 ***
+>f0f2	4f 3d d2 80				.dword 	$80d23d4f
+>f0f6	7f 80					.byte 	$7f,$80
+>f0f8	01					.byte 	1     ; *** Load Float -636.9 ***
+>f0f9	99 99 39 9f				.dword 	$9f399999
+>f0fd	8a 80					.byte 	$8a,$80
+>f0ff	2d					.byte 	$2d   ; *** Command - ***
+>f100	01					.byte 	1     ; *** Load Float 636.6483959999999 ***
+>f101	51 7f 29 9f				.dword 	$9f297f51
+>f105	8a 00					.byte 	$8a,$0
+>f107	3d					.byte 	$3d   ; *** Command = ***
+>f108	01					.byte 	1     ; *** Load Float -6546.505728 ***
+>f109	bb 0b 94 cc				.dword 	$cc940bbb
+>f10d	8d 80					.byte 	$8d,$80
+>f10f	01					.byte 	1     ; *** Load Float 5.26692360836023e-14 ***
+>f110	b2 7e 33 ed				.dword 	$ed337eb2
+>f114	54 00					.byte 	$54,$0
+>f116	2f					.byte 	$2f   ; *** Command / ***
+>f117	01					.byte 	1     ; *** Load Float -1.242946777813272e+17 ***
+>f118	ea ac ca dc				.dword 	$dccaacea
+>f11c	b9 80					.byte 	$b9,$80
+>f11e	3d					.byte 	$3d   ; *** Command = ***
+>f11f	01					.byte 	1     ; *** Load Float 13.0 ***
+>f120	00 00 00 d0				.dword 	$d0000000
+>f124	84 00					.byte 	$84,$0
+>f126	01					.byte 	1     ; *** Load Float 7.26825 ***
+>f127	06 81 95 e8				.dword 	$e8958106
+>f12b	83 00					.byte 	$83,$0
+>f12d	2b					.byte 	$2b   ; *** Command + ***
+>f12e	01					.byte 	1     ; *** Load Float 20.268250000000002 ***
+>f12f	41 60 25 a2				.dword 	$a2256041
+>f133	85 00					.byte 	$85,$0
+>f135	3d					.byte 	$3d   ; *** Command = ***
+>f136	01					.byte 	1     ; *** Load Float 2.45301 ***
+>f137	a7 1d fe 9c				.dword 	$9cfe1da7
+>f13b	82 00					.byte 	$82,$0
+>f13d	01					.byte 	1     ; *** Load Float -693.88 ***
+>f13e	eb 51 78 ad				.dword 	$ad7851eb
+>f142	8a 80					.byte 	$8a,$80
+>f144	2d					.byte 	$2d   ; *** Command - ***
+>f145	01					.byte 	1     ; *** Load Float 696.33301 ***
+>f146	09 50 15 ae				.dword 	$ae155009
+>f14a	8a 00					.byte 	$8a,$0
+>f14c	3d					.byte 	$3d   ; *** Command = ***
+>f14d	01					.byte 	1     ; *** Load Float 6.0 ***
+>f14e	00 00 00 c0				.dword 	$c0000000
+>f152	83 00					.byte 	$83,$0
+>f154	01					.byte 	1     ; *** Load Float -1.0 ***
+>f155	00 00 00 80				.dword 	$80000000
+>f159	81 80					.byte 	$81,$80
+>f15b	2f					.byte 	$2f   ; *** Command / ***
+>f15c	01					.byte 	1     ; *** Load Float -6.0 ***
+>f15d	00 00 00 c0				.dword 	$c0000000
+>f161	83 80					.byte 	$83,$80
+>f163	3d					.byte 	$3d   ; *** Command = ***
+>f164	01					.byte 	1     ; *** Load Float 7402.389504 ***
+>f165	b4 1d 53 e7				.dword 	$e7531db4
+>f169	8d 00					.byte 	$8d,$0
+>f16b	01					.byte 	1     ; *** Load Float 16.0 ***
+>f16c	00 00 00 80				.dword 	$80000000
+>f170	85 00					.byte 	$85,$0
+>f172	2f					.byte 	$2f   ; *** Command / ***
+>f173	01					.byte 	1     ; *** Load Float 462.649344 ***
+>f174	b4 1d 53 e7				.dword 	$e7531db4
+>f178	89 00					.byte 	$89,$0
+>f17a	3d					.byte 	$3d   ; *** Command = ***
+>f17b	01					.byte 	1     ; *** Load Float -123.46 ***
+>f17c	1e 85 eb f6				.dword 	$f6eb851e
+>f180	87 80					.byte 	$87,$80
+>f182	01					.byte 	1     ; *** Load Float 6.344197 ***
+>f183	6d a9 03 cb				.dword 	$cb03a96d
+>f187	83 00					.byte 	$83,$0
+>f189	7e					.byte 	$7e   ; *** Command ~ ***
+>f18a	01					.byte 	1     ; *** Load Float -1 ***
+>f18b	00 00 00 80				.dword 	$80000000
+>f18f	81 80					.byte 	$81,$80
+>f191	3d					.byte 	$3d   ; *** Command = ***
+>f192	01					.byte 	1     ; *** Load Float 382.05 ***
+>f193	66 66 06 bf				.dword 	$bf066666
+>f197	89 00					.byte 	$89,$0
+>f199	01					.byte 	1     ; *** Load Float 9.0 ***
+>f19a	00 00 00 90				.dword 	$90000000
+>f19e	84 00					.byte 	$84,$0
+>f1a0	2d					.byte 	$2d   ; *** Command - ***
+>f1a1	01					.byte 	1     ; *** Load Float 373.05 ***
+>f1a2	66 66 86 ba				.dword 	$ba866666
+>f1a6	89 00					.byte 	$89,$0
+>f1a8	3d					.byte 	$3d   ; *** Command = ***
+>f1a9	01					.byte 	1     ; *** Load Float 13.0 ***
+>f1aa	00 00 00 d0				.dword 	$d0000000
+>f1ae	84 00					.byte 	$84,$0
+>f1b0	01					.byte 	1     ; *** Load Float 13.0 ***
+>f1b1	00 00 00 d0				.dword 	$d0000000
+>f1b5	84 00					.byte 	$84,$0
+>f1b7	7e					.byte 	$7e   ; *** Command ~ ***
+>f1b8	01					.byte 	1     ; *** Load Float 0 ***
+>f1b9	00 00 00 00				.dword 	$0
+>f1bd	80 40					.byte 	$80,$40
+>f1bf	3d					.byte 	$3d   ; *** Command = ***
+>f1c0	01					.byte 	1     ; *** Load Float 20.0 ***
+>f1c1	00 00 00 a0				.dword 	$a0000000
+>f1c5	85 00					.byte 	$85,$0
+>f1c7	01					.byte 	1     ; *** Load Float 8.17364 ***
+>f1c8	bc 3a c7 82				.dword 	$82c73abc
+>f1cc	84 00					.byte 	$84,$0
+>f1ce	7e					.byte 	$7e   ; *** Command ~ ***
+>f1cf	01					.byte 	1     ; *** Load Float 1 ***
+>f1d0	00 00 00 80				.dword 	$80000000
+>f1d4	81 00					.byte 	$81,$0
+>f1d6	3d					.byte 	$3d   ; *** Command = ***
+>f1d7	01					.byte 	1     ; *** Load Float 1.61815 ***
+>f1d8	09 8a 1f cf				.dword 	$cf1f8a09
+>f1dc	81 00					.byte 	$81,$0
+>f1de	01					.byte 	1     ; *** Load Float 7.67 ***
+>f1df	d7 a3 70 f5				.dword 	$f570a3d7
+>f1e3	83 00					.byte 	$83,$0
+>f1e5	7e					.byte 	$7e   ; *** Command ~ ***
+>f1e6	01					.byte 	1     ; *** Load Float -1 ***
+>f1e7	00 00 00 80				.dword 	$80000000
+>f1eb	81 80					.byte 	$81,$80
+>f1ed	3d					.byte 	$3d   ; *** Command = ***
+>f1ee	01					.byte 	1     ; *** Load Float 2.058617 ***
+>f1ef	84 61 c0 83				.dword 	$83c06184
+>f1f3	82 00					.byte 	$82,$0
+>f1f5	01					.byte 	1     ; *** Load Float 2.7211666107177734e-08 ***
+>f1f6	2a 16 bf e9				.dword 	$e9bf162a
+>f1fa	67 00					.byte 	$67,$0
+>f1fc	7e					.byte 	$7e   ; *** Command ~ ***
+>f1fd	01					.byte 	1     ; *** Load Float 1 ***
+>f1fe	00 00 00 80				.dword 	$80000000
+>f202	81 00					.byte 	$81,$0
+>f204	3d					.byte 	$3d   ; *** Command = ***
+>f205	01					.byte 	1     ; *** Load Float -3.0 ***
+>f206	00 00 00 c0				.dword 	$c0000000
+>f20a	82 80					.byte 	$82,$80
+>f20c	01					.byte 	1     ; *** Load Float -18.0 ***
+>f20d	00 00 00 90				.dword 	$90000000
+>f211	85 80					.byte 	$85,$80
+>f213	2a					.byte 	$2a   ; *** Command * ***
+>f214	01					.byte 	1     ; *** Load Float 54.0 ***
+>f215	00 00 00 d8				.dword 	$d8000000
+>f219	86 00					.byte 	$86,$0
+>f21b	3d					.byte 	$3d   ; *** Command = ***
+>f21c	01					.byte 	1     ; *** Load Float 20.0 ***
+>f21d	00 00 00 a0				.dword 	$a0000000
+>f221	85 00					.byte 	$85,$0
+>f223	01					.byte 	1     ; *** Load Float 381.3 ***
+>f224	66 66 a6 be				.dword 	$bea66666
+>f228	89 00					.byte 	$89,$0
+>f22a	7e					.byte 	$7e   ; *** Command ~ ***
+>f22b	01					.byte 	1     ; *** Load Float -1 ***
+>f22c	00 00 00 80				.dword 	$80000000
+>f230	81 80					.byte 	$81,$80
+>f232	3d					.byte 	$3d   ; *** Command = ***
+>f233	01					.byte 	1     ; *** Load Float 7.61723 ***
+>f234	21 59 c0 f3				.dword 	$f3c05921
+>f238	83 00					.byte 	$83,$0
+>f23a	01					.byte 	1     ; *** Load Float -9.0 ***
+>f23b	00 00 00 90				.dword 	$90000000
+>f23f	84 80					.byte 	$84,$80
+>f241	2d					.byte 	$2d   ; *** Command - ***
+>f242	01					.byte 	1     ; *** Load Float 16.61723 ***
+>f243	48 16 f0 84				.dword 	$84f01648
+>f247	85 00					.byte 	$85,$0
+>f249	3d					.byte 	$3d   ; *** Command = ***
+>f24a	01					.byte 	1     ; *** Load Float 930.56 ***
+>f24b	0a d7 a3 e8				.dword 	$e8a3d70a
+>f24f	8a 00					.byte 	$8a,$0
+>f251	01					.byte 	1     ; *** Load Float 312.02 ***
+>f252	5c 8f 02 9c				.dword 	$9c028f5c
+>f256	89 00					.byte 	$89,$0
+>f258	2a					.byte 	$2a   ; *** Command * ***
+>f259	01					.byte 	1     ; *** Load Float 290353.33119999996 ***
+>f25a	99 2a c6 8d				.dword 	$8dc62a99
+>f25e	93 00					.byte 	$93,$0
+>f260	3d					.byte 	$3d   ; *** Command = ***
+>f261	01					.byte 	1     ; *** Load Float 7.999398 ***
+>f262	83 11 fb ff				.dword 	$fffb1183
+>f266	83 00					.byte 	$83,$0
+>f268	01					.byte 	1     ; *** Load Float 9.425957614439539e-14 ***
+>f269	38 f2 40 d4				.dword 	$d440f238
+>f26d	55 00					.byte 	$55,$0
+>f26f	7e					.byte 	$7e   ; *** Command ~ ***
+>f270	01					.byte 	1     ; *** Load Float 1 ***
+>f271	00 00 00 80				.dword 	$80000000
+>f275	81 00					.byte 	$81,$0
+>f277	3d					.byte 	$3d   ; *** Command = ***
+>f278	01					.byte 	1     ; *** Load Float 4.259124398231506e-09 ***
+>f279	86 a7 57 92				.dword 	$9257a786
+>f27d	65 00					.byte 	$65,$0
+>f27f	01					.byte 	1     ; *** Load Float -719.45 ***
+>f280	cc cc dc b3				.dword 	$b3dccccc
+>f284	8a 80					.byte 	$8a,$80
+>f286	2f					.byte 	$2f   ; *** Command / ***
+>f287	01					.byte 	1     ; *** Load Float -5.919972754509009e-12 ***
+>f288	ca 5f 4a d0				.dword 	$d04a5fca
+>f28c	5b 80					.byte 	$5b,$80
+>f28e	3d					.byte 	$3d   ; *** Command = ***
+>f28f	01					.byte 	1     ; *** Load Float 1.157927 ***
+>f290	b2 f3 36 94				.dword 	$9436f3b2
+>f294	81 00					.byte 	$81,$0
+>f296	01					.byte 	1     ; *** Load Float 775.44 ***
+>f297	f5 28 dc c1				.dword 	$c1dc28f5
+>f29b	8a 00					.byte 	$8a,$0
+>f29d	2a					.byte 	$2a   ; *** Command * ***
+>f29e	01					.byte 	1     ; *** Load Float 897.90291288 ***
+>f29f	53 c9 79 e0				.dword 	$e079c953
+>f2a3	8a 00					.byte 	$8a,$0
+>f2a5	3d					.byte 	$3d   ; *** Command = ***
+>f2a6	01					.byte 	1     ; *** Load Float -26.96 ***
+>f2a7	7a 14 ae d7				.dword 	$d7ae147a
+>f2ab	85 80					.byte 	$85,$80
+>f2ad	01					.byte 	1     ; *** Load Float 9.0 ***
+>f2ae	00 00 00 90				.dword 	$90000000
+>f2b2	84 00					.byte 	$84,$0
+>f2b4	2b					.byte 	$2b   ; *** Command + ***
+>f2b5	01					.byte 	1     ; *** Load Float -17.96 ***
+>f2b6	7a 14 ae 8f				.dword 	$8fae147a
+>f2ba	85 80					.byte 	$85,$80
+>f2bc	3d					.byte 	$3d   ; *** Command = ***
+>f2bd	01					.byte 	1     ; *** Load Float -435.74 ***
+>f2be	51 b8 de d9				.dword 	$d9deb851
+>f2c2	89 80					.byte 	$89,$80
+>f2c4	01					.byte 	1     ; *** Load Float 832.78 ***
+>f2c5	85 eb 31 d0				.dword 	$d031eb85
+>f2c9	8a 00					.byte 	$8a,$0
+>f2cb	2f					.byte 	$2f   ; *** Command / ***
+>f2cc	01					.byte 	1     ; *** Load Float -0.5232354283244074 ***
+>f2cd	cc c1 f2 85				.dword 	$85f2c1cc
+>f2d1	80 80					.byte 	$80,$80
+>f2d3	3d					.byte 	$3d   ; *** Command = ***
+>f2d4	01					.byte 	1     ; *** Load Float -3.0 ***
+>f2d5	00 00 00 c0				.dword 	$c0000000
+>f2d9	82 80					.byte 	$82,$80
+>f2db	01					.byte 	1     ; *** Load Float 1.9618797302246096e-06 ***
+>f2dc	4d d6 a8 83				.dword 	$83a8d64d
+>f2e0	6e 00					.byte 	$6e,$0
+>f2e2	2a					.byte 	$2a   ; *** Command * ***
+>f2e3	01					.byte 	1     ; *** Load Float -5.885639190673828e-06 ***
+>f2e4	74 41 7d c5				.dword 	$c57d4174
+>f2e8	6f 80					.byte 	$6f,$80
+>f2ea	3d					.byte 	$3d   ; *** Command = ***
+>f2eb	01					.byte 	1     ; *** Load Float 0.0 ***
+>f2ec	00 00 00 00				.dword 	$0
+>f2f0	80 40					.byte 	$80,$40
+>f2f2	01					.byte 	1     ; *** Load Float 687.24 ***
+>f2f3	28 5c cf ab				.dword 	$abcf5c28
+>f2f7	8a 00					.byte 	$8a,$0
+>f2f9	2d					.byte 	$2d   ; *** Command - ***
+>f2fa	01					.byte 	1     ; *** Load Float -687.24 ***
+>f2fb	28 5c cf ab				.dword 	$abcf5c28
+>f2ff	8a 80					.byte 	$8a,$80
+>f301	3d					.byte 	$3d   ; *** Command = ***
+>f302	01					.byte 	1     ; *** Load Float 703.59 ***
+>f303	8f c2 e5 af				.dword 	$afe5c28f
+>f307	8a 00					.byte 	$8a,$0
+>f309	01					.byte 	1     ; *** Load Float -388.95 ***
+>f30a	99 99 79 c2				.dword 	$c2799999
+>f30e	89 80					.byte 	$89,$80
+>f310	2b					.byte 	$2b   ; *** Command + ***
+>f311	01					.byte 	1     ; *** Load Float 314.64000000000004 ***
+>f312	85 eb 51 9d				.dword 	$9d51eb85
+>f316	89 00					.byte 	$89,$0
+>f318	3d					.byte 	$3d   ; *** Command = ***
+>f319	01					.byte 	1     ; *** Load Float 512632360684608.25 ***
+>f31a	e1 42 1e e9				.dword 	$e91e42e1
+>f31e	b1 00					.byte 	$b1,$0
+>f320	01					.byte 	1     ; *** Load Float 5.974832 ***
+>f321	e0 d2 31 bf				.dword 	$bf31d2e0
+>f325	83 00					.byte 	$83,$0
+>f327	2d					.byte 	$2d   ; *** Command - ***
+>f328	01					.byte 	1     ; *** Load Float 512632360684602.25 ***
+>f329	e1 42 1e e9				.dword 	$e91e42e1
+>f32d	b1 00					.byte 	$b1,$0
+>f32f	3d					.byte 	$3d   ; *** Command = ***
+>f330	01					.byte 	1     ; *** Load Float -70.28 ***
+>f331	28 5c 8f 8c				.dword 	$8c8f5c28
+>f335	87 80					.byte 	$87,$80
+>f337	01					.byte 	1     ; *** Load Float 3.433341 ***
+>f338	e3 db bb db				.dword 	$dbbbdbe3
+>f33c	82 00					.byte 	$82,$0
+>f33e	2d					.byte 	$2d   ; *** Command - ***
+>f33f	01					.byte 	1     ; *** Load Float -73.713341 ***
+>f340	08 3b 6d 93				.dword 	$936d3b08
+>f344	87 80					.byte 	$87,$80
+>f346	3d					.byte 	$3d   ; *** Command = ***
+>f347	01					.byte 	1     ; *** Load Float -0.00011454931640625 ***
+>f348	2a 32 3a f0				.dword 	$f03a322a
+>f34c	73 80					.byte 	$73,$80
+>f34e	01					.byte 	1     ; *** Load Float 2.1041046238678972e-13 ***
+>f34f	cc af e6 ec				.dword 	$ece6afcc
+>f353	56 00					.byte 	$56,$0
+>f355	2a					.byte 	$2a   ; *** Command * ***
+>f356	01					.byte 	1     ; *** Load Float -2.410237463112974e-17 ***
+>f357	80 1f 4e de				.dword 	$de4e1f80
+>f35b	49 80					.byte 	$49,$80
+>f35d	3d					.byte 	$3d   ; *** Command = ***
+>f35e	01					.byte 	1     ; *** Load Float -155.83 ***
+>f35f	e1 7a d4 9b				.dword 	$9bd47ae1
+>f363	88 80					.byte 	$88,$80
+>f365	01					.byte 	1     ; *** Load Float 297.63 ***
+>f366	d7 a3 d0 94				.dword 	$94d0a3d7
+>f36a	89 00					.byte 	$89,$0
+>f36c	2d					.byte 	$2d   ; *** Command - ***
+>f36d	01					.byte 	1     ; *** Load Float -453.46000000000004 ***
+>f36e	47 e1 ba e2				.dword 	$e2bae147
+>f372	89 80					.byte 	$89,$80
+>f374	3d					.byte 	$3d   ; *** Command = ***
+>f375	01					.byte 	1     ; *** Load Float -9.0 ***
+>f376	00 00 00 90				.dword 	$90000000
+>f37a	84 80					.byte 	$84,$80
+>f37c	01					.byte 	1     ; *** Load Float -130469.46201599999 ***
+>f37d	23 bb d2 fe				.dword 	$fed2bb23
+>f381	91 80					.byte 	$91,$80
+>f383	7e					.byte 	$7e   ; *** Command ~ ***
+>f384	01					.byte 	1     ; *** Load Float 1 ***
+>f385	00 00 00 80				.dword 	$80000000
+>f389	81 00					.byte 	$81,$0
+>f38b	3d					.byte 	$3d   ; *** Command = ***
+>f38c	01					.byte 	1     ; *** Load Float -579.24 ***
+>f38d	28 5c cf 90				.dword 	$90cf5c28
+>f391	8a 80					.byte 	$8a,$80
+>f393	01					.byte 	1     ; *** Load Float -18.0 ***
+>f394	00 00 00 90				.dword 	$90000000
+>f398	85 80					.byte 	$85,$80
+>f39a	2d					.byte 	$2d   ; *** Command - ***
+>f39b	01					.byte 	1     ; *** Load Float -561.24 ***
+>f39c	28 5c 4f 8c				.dword 	$8c4f5c28
+>f3a0	8a 80					.byte 	$8a,$80
+>f3a2	3d					.byte 	$3d   ; *** Command = ***
+>f3a3	01					.byte 	1     ; *** Load Float 2.472037 ***
+>f3a4	ad da 35 9e				.dword 	$9e35daad
+>f3a8	82 00					.byte 	$82,$0
+>f3aa	01					.byte 	1     ; *** Load Float 1497.1494400000001 ***
+>f3ab	36 c8 24 bb				.dword 	$bb24c836
+>f3af	8b 00					.byte 	$8b,$0
+>f3b1	7e					.byte 	$7e   ; *** Command ~ ***
+>f3b2	01					.byte 	1     ; *** Load Float -1 ***
+>f3b3	00 00 00 80				.dword 	$80000000
+>f3b7	81 80					.byte 	$81,$80
+>f3b9	3d					.byte 	$3d   ; *** Command = ***
+>f3ba	01					.byte 	1     ; *** Load Float 131.84 ***
+>f3bb	3d 0a d7 83				.dword 	$83d70a3d
+>f3bf	88 00					.byte 	$88,$0
+>f3c1	01					.byte 	1     ; *** Load Float 2.468742 ***
+>f3c2	72 de ff 9d				.dword 	$9dffde72
+>f3c6	82 00					.byte 	$82,$0
+>f3c8	7e					.byte 	$7e   ; *** Command ~ ***
+>f3c9	01					.byte 	1     ; *** Load Float 1 ***
+>f3ca	00 00 00 80				.dword 	$80000000
+>f3ce	81 00					.byte 	$81,$0
+>f3d0	3d					.byte 	$3d   ; *** Command = ***
+>f3d1	01					.byte 	1     ; *** Load Float 11.0 ***
+>f3d2	00 00 00 b0				.dword 	$b0000000
+>f3d6	84 00					.byte 	$84,$0
+>f3d8	01					.byte 	1     ; *** Load Float 47495.970816 ***
+>f3d9	87 f8 87 b9				.dword 	$b987f887
+>f3dd	90 00					.byte 	$90,$0
+>f3df	2d					.byte 	$2d   ; *** Command - ***
+>f3e0	01					.byte 	1     ; *** Load Float -47484.970816 ***
+>f3e1	87 f8 7c b9				.dword 	$b97cf887
+>f3e5	90 80					.byte 	$90,$80
+>f3e7	3d					.byte 	$3d   ; *** Command = ***
+>f3e8	01					.byte 	1     ; *** Load Float -671.2 ***
+>f3e9	cc cc cc a7				.dword 	$a7cccccc
+>f3ed	8a 80					.byte 	$8a,$80
+>f3ef	01					.byte 	1     ; *** Load Float -671.2 ***
+>f3f0	cc cc cc a7				.dword 	$a7cccccc
+>f3f4	8a 80					.byte 	$8a,$80
+>f3f6	2f					.byte 	$2f   ; *** Command / ***
+>f3f7	01					.byte 	1     ; *** Load Float 1.0 ***
+>f3f8	00 00 00 80				.dword 	$80000000
+>f3fc	81 00					.byte 	$81,$0
+>f3fe	3d					.byte 	$3d   ; *** Command = ***
+>f3ff	01					.byte 	1     ; *** Load Float 327.32 ***
+>f400	c2 f5 a8 a3				.dword 	$a3a8f5c2
+>f404	89 00					.byte 	$89,$0
+>f406	01					.byte 	1     ; *** Load Float 104.09 ***
+>f407	7a 14 2e d0				.dword 	$d02e147a
+>f40b	87 00					.byte 	$87,$0
+>f40d	7e					.byte 	$7e   ; *** Command ~ ***
+>f40e	01					.byte 	1     ; *** Load Float 1 ***
+>f40f	00 00 00 80				.dword 	$80000000
+>f413	81 00					.byte 	$81,$0
+>f415	3d					.byte 	$3d   ; *** Command = ***
+>f416	01					.byte 	1     ; *** Load Float -850.64 ***
+>f417	c2 f5 a8 d4				.dword 	$d4a8f5c2
+>f41b	8a 80					.byte 	$8a,$80
+>f41d	01					.byte 	1     ; *** Load Float 2.0 ***
+>f41e	00 00 00 80				.dword 	$80000000
+>f422	82 00					.byte 	$82,$0
+>f424	2a					.byte 	$2a   ; *** Command * ***
+>f425	01					.byte 	1     ; *** Load Float -1701.28 ***
+>f426	c2 f5 a8 d4				.dword 	$d4a8f5c2
+>f42a	8b 80					.byte 	$8b,$80
+>f42c	3d					.byte 	$3d   ; *** Command = ***
+>f42d	01					.byte 	1     ; *** Load Float 8.086521 ***
+>f42e	d8 63 62 81				.dword 	$816263d8
+>f432	84 00					.byte 	$84,$0
+>f434	01					.byte 	1     ; *** Load Float -19.0 ***
+>f435	00 00 00 98				.dword 	$98000000
+>f439	85 80					.byte 	$85,$80
+>f43b	2a					.byte 	$2a   ; *** Command * ***
+>f43c	01					.byte 	1     ; *** Load Float -153.64389899999998 ***
+>f43d	90 d6 a4 99				.dword 	$99a4d690
+>f441	88 80					.byte 	$88,$80
+>f443	3d					.byte 	$3d   ; *** Command = ***
+>f444	01					.byte 	1     ; *** Load Float -550.85 ***
+>f445	66 66 b6 89				.dword 	$89b66666
+>f449	8a 80					.byte 	$8a,$80
+>f44b	01					.byte 	1     ; *** Load Float -133046466091686.05 ***
+>f44c	b3 96 02 f2				.dword 	$f20296b3
+>f450	af 80					.byte 	$af,$80
+>f452	7e					.byte 	$7e   ; *** Command ~ ***
+>f453	01					.byte 	1     ; *** Load Float 1 ***
+>f454	00 00 00 80				.dword 	$80000000
+>f458	81 00					.byte 	$81,$0
+>f45a	3d					.byte 	$3d   ; *** Command = ***
+>f45b	01					.byte 	1     ; *** Load Float -474.74 ***
+>f45c	51 b8 5e ed				.dword 	$ed5eb851
+>f460	89 80					.byte 	$89,$80
+>f462	01					.byte 	1     ; *** Load Float 2.557636 ***
+>f463	e7 4e b0 a3				.dword 	$a3b04ee7
+>f467	82 00					.byte 	$82,$0
+>f469	2b					.byte 	$2b   ; *** Command + ***
+>f46a	01					.byte 	1     ; *** Load Float -472.182364 ***
+>f46b	b4 57 17 ec				.dword 	$ec1757b4
+>f46f	89 80					.byte 	$89,$80
+>f471	3d					.byte 	$3d   ; *** Command = ***
+>f472	01					.byte 	1     ; *** Load Float 714.69 ***
+>f473	f5 28 ac b2				.dword 	$b2ac28f5
+>f477	8a 00					.byte 	$8a,$0
+>f479	01					.byte 	1     ; *** Load Float 542.51 ***
+>f47a	d7 a3 a0 87				.dword 	$87a0a3d7
+>f47e	8a 00					.byte 	$8a,$0
+>f480	2f					.byte 	$2f   ; *** Command / ***
+>f481	01					.byte 	1     ; *** Load Float 1.3173766382186505 ***
+>f482	34 cc 9f a8				.dword 	$a89fcc34
+>f486	81 00					.byte 	$81,$0
+>f488	3d					.byte 	$3d   ; *** Command = ***
+>f489	01					.byte 	1     ; *** Load Float 399.12 ***
+>f48a	28 5c 8f c7				.dword 	$c78f5c28
+>f48e	89 00					.byte 	$89,$0
+>f490	01					.byte 	1     ; *** Load Float 16.0 ***
+>f491	00 00 00 80				.dword 	$80000000
+>f495	85 00					.byte 	$85,$0
+>f497	2d					.byte 	$2d   ; *** Command - ***
+>f498	01					.byte 	1     ; *** Load Float 383.12 ***
+>f499	28 5c 8f bf				.dword 	$bf8f5c28
+>f49d	89 00					.byte 	$89,$0
+>f49f	3d					.byte 	$3d   ; *** Command = ***
+>f4a0	01					.byte 	1     ; *** Load Float 195.4 ***
+>f4a1	66 66 66 c3				.dword 	$c3666666
+>f4a5	88 00					.byte 	$88,$0
+>f4a7	01					.byte 	1     ; *** Load Float 2.274403 ***
+>f4a8	99 d1 8f 91				.dword 	$918fd199
+>f4ac	82 00					.byte 	$82,$0
+>f4ae	7e					.byte 	$7e   ; *** Command ~ ***
+>f4af	01					.byte 	1     ; *** Load Float 1 ***
+>f4b0	00 00 00 80				.dword 	$80000000
+>f4b4	81 00					.byte 	$81,$0
+>f4b6	3d					.byte 	$3d   ; *** Command = ***
+>f4b7	01					.byte 	1	; *** Load Integer 99999 ***
+>f4b8	9f 86 01 00				.dword 	$1869f
+>f4bc	00 01					.byte 	0,$01
 
 ;******  Return to file: testing/fptest.asm
 
->e2d1	00						.byte 	0
+>f4be	00						.byte 	0
 
 ;******  Return to file: basic.asm
 
->fffa	09 e2						.word	NMIHandler
+>fffa	ff e1						.word	NMIHandler
 >fffc	e2 e1						.word 	StartROM
 >fffe	71 a1						.word 	TIM_BreakVector
 
