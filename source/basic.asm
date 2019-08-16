@@ -41,12 +41,19 @@
 
 StartROM:
 		clc
-		xce
-		nop	
-		rep 	#$20
+		xce	
+		rep 	#$30
+		.al
 		lda 	#$01FF 						; empty stack
 		tcs
-		sep 	#$20
+		lda 	#$0000
+		tax
+		tay
+		.as
+		sep 	#$30
+		
+;		ldx 		#$FF 					; empty stack
+;		txs
 
 		jsr 	IF_Reset 					; reset external interface
 		jsr 	IFT_ClearScreen

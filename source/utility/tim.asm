@@ -104,9 +104,6 @@ TIM_Execute:
 		lda 	TIM_A 						; restore AXYZ
 		ldx 	TIM_X
 		ldy 	TIM_Y
-		.if 	CPU=4510 					; can we load Z ?
-		ldz 	TIM_Z
-		.endif
 		plp 								; and PS Byte.
 		jmp 	(zTemp3)					; go execute
 
@@ -289,9 +286,6 @@ _TIMBreak:
 		plx
 		stx 	TIM_X
 		sty 	TIM_Y		
-		.if 	CPU=4510 					; can we save Z ?
-		stz 	TIM_Z
-		.endif
 		pla 								; get Status Register
 		sta 	TIM_SR
 		pla
@@ -365,3 +359,5 @@ _TIM_LMLoop:
 		;
 _TIMLMDone:
 		jmp 	TIM_NewCommand					
+
+		

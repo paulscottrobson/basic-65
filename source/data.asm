@@ -71,7 +71,6 @@ Tim_SR:		.byte ? 						; Processor Status
 Tim_A:		.byte ? 						; Processor Registers
 Tim_X:		.byte ?
 Tim_Y:		.byte ?
-Tim_Z:		.byte ?
 Tim_SP:		.byte ?							; Stack Pointer
 
 ExpTemp:	.byte ?							; Working temp for exponents.
