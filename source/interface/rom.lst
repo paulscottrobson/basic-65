@@ -1,0 +1,367 @@
+
+; 64tass Turbo Assembler Macro V1.54.1900 listing file
+; 64tass -x -Wall -b -f -b -L rom.lst -o rom.bin interface_test.asm
+; Fri Aug 16 15:54:26 2019
+
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: interface_test.asm
+
+.0000	ea		nop				nop
+>0300					IFT_XCursor:	.byte ?
+>0301					IFT_YCursor:	.byte ?
+>0302					IFT_Buffer:		.fill 90
+>035c					IFT_LineBuffer:	.fill 90
+
+;******  Processing file: interface_65816.asm
+
+=64					IF_Width 	= 64 							; characters across
+=32					IF_Height 	= 32 							; characters down.
+=4					IF_Pos 		= 4 							; current position, start of line.
+=8					IF_XPos 	= 8 							; current position, horizontal.
+=$f0000					IF_Screen = $F0000							; 2k screen RAM here
+=$f8010					IF_PKeyboard = $F8010						; Keyboard port.
+=$f8000					IF_PBreak = $F8000 							; Break key.
+.e000					IF_Reset:
+.e000	60		rts				rts
+.e001					IF_Home:
+.e001	48		pha				pha
+.e002	a9 00		lda #$00			lda 	#0	 						; zero X position
+.e004	85 08		sta $08				sta 	IF_XPos
+.e006	a9 00		lda #$00			lda 	#IF_Screen & $FF 			; set r/w pos.
+.e008	85 04		sta $04				sta 	IF_Pos
+.e00a	a9 00		lda #$00			lda 	#(IF_Screen >> 8) & $FF
+.e00c	85 05		sta $05				sta 	IF_Pos+1
+.e00e	a9 0f		lda #$0f			lda 	#IF_Screen >> 16
+.e010	85 06		sta $06				sta 	IF_Pos+2
+.e012	a9 00		lda #$00			lda 	#$00
+.e014	85 07		sta $07				sta 	IF_Pos+3
+.e016	68		pla				pla
+.e017	60		rts				rts
+.e018					IF_NewLine:
+.e018	48		pha				pha
+.e019	a9 00		lda #$00			lda 	#0 							; back to start of line
+.e01b	85 08		sta $08				sta 	IF_XPos
+.e01d	18		clc				clc 								; down one line
+.e01e	a5 04		lda $04				lda 	IF_Pos
+.e020	69 40		adc #$40			adc 	#64
+.e022	85 04		sta $04				sta 	IF_Pos
+.e024	90 02		bcc $e028			bcc 	_IF_NoCarry 				; carry through.
+.e026	e6 05		inc $05				inc 	IF_Pos+1
+.e028					_IF_NoCarry:
+.e028	68		pla				pla
+.e029	60		rts				rts
+.e02a					IF_Read:
+.e02a	5a		phy				phy 								; save current Y
+.e02b	a4 08		ldy $08				ldy 	IF_XPos 					; read character at current position
+.e02d	b7 04		lda [$04],y			lda 	[IF_Pos],y
+.e02f	e6 08		inc $08				inc 	IF_XPos 					; step right.
+.e031	7a		ply				ply									; restore Y
+.e032	60		rts				rts
+.e033					IF_Write:
+.e033	5a		phy				phy 								; save current Y
+.e034	a4 08		ldy $08				ldy 	IF_XPos 					; write character at current position
+.e036	97 04		sta [$04],y			sta 	[IF_Pos],y
+.e038	e6 08		inc $08				inc 	IF_XPos 					; step right.
+.e03a	7a		ply				ply									; restore Y
+.e03b	60		rts				rts
+.e03c					IF_LeftOne:
+.e03c	c6 08		dec $08				dec 	IF_XPos
+.e03e	60		rts				rts
+.e03f					IF_CheckBreak:
+.e03f	af 00 80 0f	lda $0f8000			lda 	IF_PBreak					; non-zero if Ctrl+C pressed.
+.e043	60		rts				rts
+.e044					IF_GetKey:
+.e044	af 10 80 0f	lda $0f8010			lda 	IF_PKeyboard				; read keyboard
+.e048	f0 08		beq $e052			beq		_IFGK_NoKey 				; skip if zero,no key pressed
+.e04a	48		pha				pha 								; key pressed, clear queue.
+.e04b	a9 00		lda #$00			lda 	#0
+.e04d	8f 10 80 0f	sta $0f8010			sta 	IF_PKeyboard
+.e051	68		pla				pla
+.e052					_IFGK_NoKey:
+.e052	09 00		ora #$00			ora 	#0							; set Z flag appropriately.
+.e054	60		rts				rts
+
+;******  Return to file: interface_test.asm
+
+
+;******  Processing file: interface_tools.asm
+
+.e055					IFT_ClearScreen:
+.e055	48		pha				pha
+.e056	da		phx				phx
+.e057	5a		phy				phy
+.e058	20 01 e0	jsr $e001			jsr 	IF_Home 					; home cursor
+.e05b	a2 20		ldx #$20			ldx 	#IF_Height 					; this many lines.
+.e05d					_IFT_CS0:
+.e05d	a0 40		ldy #$40			ldy 	#IF_Width 					; this many chars/line
+.e05f					_IFT_CS1:
+.e05f	a9 20		lda #$20			lda 	#' '						; clear line.
+.e061	20 33 e0	jsr $e033			jsr 	IF_Write
+.e064	88		dey				dey
+.e065	d0 f8		bne $e05f			bne 	_IFT_CS1
+.e067	20 18 e0	jsr $e018			jsr 	IF_NewLine 					; next line down
+.e06a	ca		dex				dex
+.e06b	d0 f0		bne $e05d			bne 	_IFT_CS0
+.e06d	7a		ply				ply
+.e06e	fa		plx				plx
+.e06f	68		pla				pla
+.e070					IFT_HomeCursor:
+.e070	48		pha				pha
+.e071	20 01 e0	jsr $e001			jsr 	IF_Home
+.e074	a9 00		lda #$00			lda 	#0
+.e076	8d 00 03	sta $0300			sta 	IFT_XCursor
+.e079	8d 01 03	sta $0301			sta 	IFT_YCursor
+.e07c	68		pla				pla
+.e07d	60		rts				rts
+.e07e					IFT_UpLine:
+.e07e	48		pha				pha
+.e07f	ad 01 03	lda $0301			lda  	IFT_YCursor 				; get Y
+.e082	3a		dec a				dec 	a 							; line above
+.e083	30 03		bmi $e088			bmi 	_IFTULExit 					; too far, abort
+.e085	20 13 e1	jsr $e113			jsr 	IFT_SetYPos					; set to that line.
+.e088					_IFTULExit:
+.e088	68		pla				pla
+.e089	60		rts				rts
+.e08a					IFT_PrintCharacter:
+.e08a	c9 0d		cmp #$0d			cmp 	#13 						; handle newline.
+.e08c	f0 16		beq $e0a4			beq 	IFT_NewLine
+.e08e	48		pha				pha
+.e08f	20 bc e0	jsr $e0bc			jsr 	IFT_UpperCase 				; make upper case
+.e092	20 33 e0	jsr $e033			jsr 	IF_Write 					; write out.
+.e095	ee 00 03	inc $0300			inc 	IFT_XCursor 				; bump x cursor
+.e098	ad 00 03	lda $0300			lda 	IFT_XCursor 				; reached RHS ?
+.e09b	c9 40		cmp #$40			cmp 	#IF_Width
+.e09d	d0 03		bne $e0a2			bne 	_IFT_PCNotEOL
+.e09f	20 a4 e0	jsr $e0a4			jsr 	IFT_NewLine 				; if so do new line.
+.e0a2					_IFT_PCNotEOL:
+.e0a2	68		pla				pla
+.e0a3	60		rts				rts
+.e0a4					IFT_NewLine:
+.e0a4	48		pha				pha
+.e0a5	20 18 e0	jsr $e018			jsr 	IF_NewLine 					; new line on actual screen.
+.e0a8	a9 00		lda #$00			lda 	#0 							; reset x position
+.e0aa	8d 00 03	sta $0300			sta 	IFT_XCursor
+.e0ad	ee 01 03	inc $0301			inc 	IFT_YCursor 				; move down.
+.e0b0	ad 01 03	lda $0301			lda 	IFT_YCursor
+.e0b3	c9 20		cmp #$20			cmp 	#IF_Height 					; reached bottom.
+.e0b5	d0 03		bne $e0ba			bne 	_IFT_NL_NotEOS
+.e0b7	20 c7 e0	jsr $e0c7			jsr 	IFT_Scroll 					; scroll screen up.
+.e0ba					_IFT_NL_NotEOS:
+.e0ba	68		pla				pla
+.e0bb	60		rts				rts
+.e0bc					IFT_UpperCase:
+.e0bc	c9 61		cmp #$61			cmp 	#"a"
+.e0be	90 06		bcc $e0c6			bcc 	_IFT_UCExit
+.e0c0	c9 7b		cmp #$7b			cmp 	#"z"+1
+.e0c2	b0 02		bcs $e0c6			bcs 	_IFT_UCExit
+.e0c4	49 20		eor #$20			eor 	#$20
+.e0c6					_IFT_UCExit:
+.e0c6	60		rts				rts
+.e0c7					IFT_Scroll:
+.e0c7	48		pha				pha 								; save AXY
+.e0c8	da		phx				phx
+.e0c9	5a		phy				phy
+.e0ca	a2 00		ldx #$00			ldx 	#0 							; start scrolling.
+.e0cc					_IFT_SLoop:
+.e0cc	20 ec e0	jsr $e0ec			jsr 	_IFT_ScrollLine 			; scroll line X+1 => X
+.e0cf	e8		inx				inx
+.e0d0	e0 1f		cpx #$1f			cpx 	#IF_Height-1				; do whole screen
+.e0d2	d0 f8		bne $e0cc			bne 	_IFT_SLoop
+.e0d4	a9 1f		lda #$1f			lda 	#IF_Height-1 				; move to X = 0,Y = A
+.e0d6	20 13 e1	jsr $e113			jsr 	IFT_SetYPos
+.e0d9	a2 40		ldx #$40			ldx 	#IF_Width 					; blank line
+.e0db					_IFT_SBlank:
+.e0db	a9 20		lda #$20			lda 	#32
+.e0dd	20 33 e0	jsr $e033			jsr 	IF_Write
+.e0e0	ca		dex				dex
+.e0e1	d0 f8		bne $e0db			bne 	_IFT_SBlank
+.e0e3	a9 1f		lda #$1f			lda 	#IF_Height-1 				; move to X = 0,Y = A
+.e0e5	20 13 e1	jsr $e113			jsr 	IFT_SetYPos
+.e0e8	7a		ply				ply
+.e0e9	fa		plx				plx
+.e0ea	68		pla				pla
+.e0eb	60		rts				rts
+.e0ec					_IFT_ScrollLine:
+.e0ec	da		phx				phx
+.e0ed	da		phx				phx
+.e0ee	8a		txa				txa 								; copy line into buffer.
+.e0ef	1a		inc a				inc 	a 							; next line down.
+.e0f0	20 13 e1	jsr $e113			jsr 	IFT_SetYPos
+.e0f3	a2 00		ldx #$00			ldx 	#0
+.e0f5					_IFTScrollCopy1:
+.e0f5	20 2a e0	jsr $e02a			jsr 	IF_Read
+.e0f8	9d 02 03	sta $0302,x			sta 	IFT_Buffer,x
+.e0fb	e8		inx				inx
+.e0fc	e0 40		cpx #$40			cpx 	#IF_Width
+.e0fe	d0 f5		bne $e0f5			bne 	_IFTScrollCopy1
+.e100	68		pla				pla
+.e101	20 13 e1	jsr $e113			jsr 	IFT_SetYPos
+.e104	a2 00		ldx #$00			ldx 	#0
+.e106					_IFTScrollCopy2:
+.e106	bd 02 03	lda $0302,x			lda 	IFT_Buffer,x
+.e109	20 33 e0	jsr $e033			jsr 	IF_Write
+.e10c	e8		inx				inx
+.e10d	e0 40		cpx #$40			cpx 	#IF_Width
+.e10f	d0 f5		bne $e106			bne 	_IFTScrollCopy2
+.e111	fa		plx				plx
+.e112	60		rts				rts
+.e113					IFT_SetYPos:
+.e113	48		pha				pha
+.e114	da		phx				phx
+.e115	aa		tax				tax
+.e116	20 70 e0	jsr $e070			jsr 	IFT_HomeCursor
+.e119	e0 00		cpx #$00			cpx 	#0
+.e11b	f0 09		beq $e126			beq 	_IFT_MOAExit
+.e11d					_IFT_MOALoop:
+.e11d	20 18 e0	jsr $e018			jsr 	IF_NewLine
+.e120	ee 01 03	inc $0301			inc 	IFT_YCursor
+.e123	ca		dex				dex
+.e124	d0 f7		bne $e11d			bne		_IFT_MOALoop
+.e126					_IFT_MOAExit:
+.e126	fa		plx				plx
+.e127	68		pla				pla
+.e128	60		rts				rts
+.e129					IFT_GetKeyCursor:
+.e129	20 31 e1	jsr $e131			jsr 	_IFT_FlipCursor 			; reverse current
+.e12c					_IFT_GKCWait:
+.e12c	20 44 e0	jsr $e044			jsr 	IF_GetKey 					; get key
+.e12f	f0 fb		beq $e12c			beq 	_IFT_GKCWait
+.e131					_IFT_FlipCursor:
+.e131	48		pha				pha 								; save
+.e132	20 2a e0	jsr $e02a			jsr 	IF_Read 					; read
+.e135	20 3c e0	jsr $e03c			jsr 	IF_LeftOne
+.e138	49 80		eor #$80			eor 	#$80 						; reverse
+.e13a	20 33 e0	jsr $e033			jsr 	IF_Write 					; write
+.e13d	20 3c e0	jsr $e03c			jsr 	IF_LeftOne
+.e140	68		pla				pla
+.e141	60		rts				rts
+.e142					IFT_ReadLine:
+.e142	48		pha				pha
+.e143					_IFT_RLLoop:
+.e143	20 29 e1	jsr $e129			jsr 	IFT_GetKeyCursor 			; get keystroke
+.e146	c9 0d		cmp #$0d			cmp 	#13							; return
+.e148	f0 7d		beq $e1c7			beq 	_IFT_RLExit
+.e14a	c9 20		cmp #$20			cmp 	#32 						; control character
+.e14c	90 05		bcc $e153			bcc 	_IFT_Control
+.e14e	20 8a e0	jsr $e08a			jsr 	IFT_PrintCharacter
+.e151	80 f0		bra $e143			bra 	_IFT_RLLoop
+.e153					_IFT_Control:
+.e153	c9 01		cmp #$01			cmp 	#"A"-64
+.e155	f0 26		beq $e17d			beq 	_IFT_Left
+.e157	c9 04		cmp #$04			cmp 	#"D"-64
+.e159	f0 2e		beq $e189			beq 	_IFT_Right
+.e15b	c9 17		cmp #$17			cmp 	#"W"-64
+.e15d	f0 36		beq $e195			beq 	_IFT_Up
+.e15f	c9 13		cmp #$13			cmp 	#"S"-64
+.e161	f0 3e		beq $e1a1			beq 	_IFT_Down
+.e163	c9 08		cmp #$08			cmp 	#"H"-64
+.e165	f0 09		beq $e170			beq 	_IFT_Backspace
+.e167	c9 1a		cmp #$1a			cmp 	#"Z"-64
+.e169	d0 d8		bne $e143			bne 	_IFT_RLLoop
+.e16b	20 55 e0	jsr $e055			jsr 	IFT_ClearScreen				; clear CTL-Z
+.e16e	80 d3		bra $e143			bra 	_IFT_RLLoop
+.e170					_IFT_Backspace:
+.e170	ad 00 03	lda $0300			lda 	IFT_XCursor 				; check not start of line.
+.e173	f0 ce		beq $e143			beq 	_IFT_RLLoop
+.e175	20 3c e0	jsr $e03c			jsr 	IF_LeftOne
+.e178	a9 20		lda #$20			lda 	#" "						; overwrite with space, drop through to left
+.e17a	20 33 e0	jsr $e033			jsr 	IF_Write
+.e17d					_IFT_Left:
+.e17d	ce 00 03	dec $0300			dec 	IFT_XCursor 				; left CTL-W
+.e180	10 29		bpl $e1ab			bpl 	_IFT_Reposition
+.e182	a9 3f		lda #$3f			lda 	#IF_Width-1
+.e184					_IFT_SetX:
+.e184	8d 00 03	sta $0300			sta 	IFT_XCursor
+.e187	80 22		bra $e1ab			bra 	_IFT_Reposition
+.e189					_IFT_Right:
+.e189	ee 00 03	inc $0300			inc 	IFT_XCursor
+.e18c	ad 00 03	lda $0300			lda 	IFT_XCursor
+.e18f	49 40		eor #$40			eor 	#IF_Width
+.e191	f0 f1		beq $e184			beq 	_IFT_SetX
+.e193	80 16		bra $e1ab			bra 	_IFT_Reposition
+.e195					_IFT_Up:
+.e195	ce 01 03	dec $0301			dec 	IFT_YCursor
+.e198	10 11		bpl $e1ab			bpl 	_IFT_Reposition
+.e19a	a9 1f		lda #$1f			lda 	#IF_Height-1
+.e19c					_IFT_SetY:
+.e19c	8d 01 03	sta $0301			sta 	IFT_YCursor
+.e19f	80 0a		bra $e1ab			bra 	_IFT_Reposition
+.e1a1					_IFT_Down:
+.e1a1	ee 01 03	inc $0301			inc 	IFT_YCursor
+.e1a4	ad 01 03	lda $0301			lda 	IFT_YCursor
+.e1a7	49 20		eor #$20			eor 	#IF_Height
+.e1a9	f0 f1		beq $e19c			beq 	_IFT_SetY
+.e1ab					_IFT_Reposition:
+.e1ab	ad 00 03	lda $0300			lda 	IFT_XCursor 				; put cursor at xCursor,yCursor
+.e1ae	48		pha				pha
+.e1af	ad 01 03	lda $0301			lda 	IFT_YCursor
+.e1b2	20 13 e1	jsr $e113			jsr 	IFT_SetYPos
+.e1b5	68		pla				pla
+.e1b6	aa		tax				tax
+.e1b7	e0 00		cpx #$00			cpx 	#0
+.e1b9	f0 88		beq $e143			beq 	_IFT_RLLoop
+.e1bb					_IFT_MoveRight:
+.e1bb	20 2a e0	jsr $e02a			jsr 	IF_Read
+.e1be	ee 00 03	inc $0300			inc 	IFT_XCursor
+.e1c1	ca		dex				dex
+.e1c2	d0 f7		bne $e1bb			bne 	_IFT_MoveRight
+.e1c4	4c 43 e1	jmp $e143			jmp 	_IFT_RLLoop
+.e1c7					_IFT_RLExit:
+.e1c7	ad 01 03	lda $0301			lda 	IFT_YCursor 				; go to start of line.
+.e1ca	20 13 e1	jsr $e113			jsr 	IFT_SetYPos
+.e1cd	a2 00		ldx #$00			ldx 	#0 							; read text into line.
+.e1cf					_IFT_RLRead:
+.e1cf	20 2a e0	jsr $e02a			jsr 	IF_Read
+.e1d2	9d 5c 03	sta $035c,x			sta 	IFT_LineBuffer,x
+.e1d5	e8		inx				inx
+.e1d6	e0 40		cpx #$40			cpx 	#IF_Width
+.e1d8	d0 f5		bne $e1cf			bne 	_IFT_RLRead
+.e1da					_IFT_RL_Trim:
+.e1da	ca		dex				dex 	 							; previous char
+.e1db	30 07		bmi $e1e4			bmi 	_IFT_Found 					; gone too far
+.e1dd	bd 5c 03	lda $035c,x			lda 	IFT_LineBuffer,x			; go back if space
+.e1e0	c9 20		cmp #$20			cmp 	#" "
+.e1e2	f0 f6		beq $e1da			beq 	_IFT_RL_Trim
+.e1e4					_IFT_Found:
+.e1e4	e8		inx				inx 								; forward to non-space
+.e1e5	a9 00		lda #$00			lda 	#0							; make it ASCIIZ
+.e1e7	9d 5c 03	sta $035c,x			sta 	IFT_LineBuffer,x
+.e1ea	68		pla				pla
+.e1eb	a2 5c		ldx #$5c			ldx 	#IFT_LineBuffer & $FF 		; put address in YX
+.e1ed	a0 03		ldy #$03			ldy 	#IFT_LineBuffer >> 8
+.e1ef	60		rts				rts
+
+;******  Return to file: interface_test.asm
+
+.e1f0					TestCode:
+.e1f0	18		clc				clc
+.e1f1	fb		xce				xce
+.e1f2	c2 30		rep #$30			rep 	#$30
+.e1f4	a9 ff 01	lda #$01ff			lda 	#$01FF 						; empty stack
+.e1f7	1b		tcs				tcs
+.e1f8	a9 00 00	lda #$0000			lda 	#$0000
+.e1fb	aa		tax				tax
+.e1fc	a8		tay				tay
+.e1fd	e2 30		sep #$30			sep 	#$30
+.e1ff	20 00 e0	jsr $e000			jsr 		IF_Reset 				; reset external interface
+.e202	20 55 e0	jsr $e055			jsr 		IFT_ClearScreen
+.e205	20 a4 e0	jsr $e0a4	Next:	jsr 		IFT_NewLine
+.e208	20 42 e1	jsr $e142	WaitKey:jsr 		IFT_ReadLine
+.e20b	20 a4 e0	jsr $e0a4			jsr 		IFT_NewLine
+.e20e	a2 00		ldx #$00			ldx 		#0
+.e210					_OutLine:
+.e210	bd 5c 03	lda $035c,x			lda 		IFT_LineBuffer,x
+.e213	f0 f0		beq $e205			beq 		Next
+.e215	20 8a e0	jsr $e08a			jsr 		IFT_PrintCharacter
+.e218	a9 5f		lda #$5f			lda 		#"_"
+.e21a	20 8a e0	jsr $e08a			jsr 		IFT_PrintCharacter
+.e21d	e8		inx				inx
+.e21e	80 f0		bra $e210			bra 		_OutLine
+.e220					DummyRoutine:
+.e220	40		rti				rti
+>fffa	20 e2						.word		DummyRoutine
+>fffc	f0 e1						.word 		TestCode
+>fffe	20 e2						.word 		DummyRoutine
+
+;******  End of listing
