@@ -2,7 +2,7 @@
 rem
 rem		Build BASIC
 rem
-del \Q  memory.dump 
+del /Q  memory.dump 
 pushd scripts
 rem python ftestgen.py >..\testing\script.inc
 python fscript.py >..\testing\script.inc

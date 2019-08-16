@@ -3,7 +3,7 @@
 ;
 ;		Name : 		fpparts.asm
 ;		Purpose :	Get Fractional/Integer part of a float.
-;		Date :		15th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************
@@ -94,8 +94,7 @@ _FPGP_NoFlip:
 		plp
 		php 								; get action flag on the stack
 		bcc 	_FPGP_NotFractional 		; if fractional part always return +ve.
-		lda 	#0
-		sta 	XS_Type,x
+		stz 	XS_Type,x
 _FPGP_NotFractional:		
 		;
 		#iszero32x XS_Mantissa 				; is the result zero

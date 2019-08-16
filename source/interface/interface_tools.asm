@@ -3,7 +3,7 @@
 ;
 ;		Name : 		interface_tools.asm
 ;		Purpose :	Interface routines
-;		Date :		10th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************
@@ -42,12 +42,9 @@ _IFT_CS1:
 ; *******************************************************************************************
 
 IFT_HomeCursor:
-		pha
 		jsr 	IF_Home
-		lda 	#0
-		sta 	IFT_XCursor
-		sta 	IFT_YCursor
-		pla
+		stz 	IFT_XCursor
+		stz 	IFT_YCursor
 		rts
 
 ; *******************************************************************************************
@@ -96,8 +93,7 @@ _IFT_PCNotEOL:
 IFT_NewLine:
 		pha
 		jsr 	IF_NewLine 					; new line on actual screen.
-		lda 	#0 							; reset x position
-		sta 	IFT_XCursor
+		stz 	IFT_XCursor					; reset x position
 		inc 	IFT_YCursor 				; move down.
 		lda 	IFT_YCursor
 		cmp 	#IF_Height 					; reached bottom.
@@ -318,9 +314,8 @@ _IFT_RL_Trim:								; trim RH spaces
 		cmp 	#" "
 		beq 	_IFT_RL_Trim
 _IFT_Found:		
-		inx 								; forward to non-space
-		lda 	#0							; make it ASCIIZ
-		sta 	IFT_LineBuffer,x
+		inx 								; forward to non-space							
+		stz 	IFT_LineBuffer,x 			; make it ASCIIZ
 		pla
 		ldx 	#IFT_LineBuffer & $FF 		; put address in YX
 		ldy 	#IFT_LineBuffer >> 8

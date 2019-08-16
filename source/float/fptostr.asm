@@ -3,7 +3,7 @@
 ;
 ;		Name : 		fptostr.asm
 ;		Purpose :	Convert TOXS to string at current buffer position
-;		Date :		15th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************
@@ -27,8 +27,7 @@ _FPTSExit:
 _FPTSIsFloat:
 		lda 		XS_Type,x 				; is it signed ?
 		bpl 		_FPTSNotSigned
-		lda 		#0 						; clear sign flag
-		sta 		XS_Type,x
+		stz 		XS_Type,x				; clear sign flag
 		lda 		#"-"					; output a minus
 		jsr 		ITSOutputCharacter
 		;
@@ -48,8 +47,7 @@ _FPTSStandard:
 		;			Output in exponent format
 		;
 _FPTSExponent:
-		lda 		#0 						; zero the exponent count.
-		sta 		ExpCount
+		stz 		ExpCount				; zero the exponent count.
 		;
 _FPTSExponentLoop:
 		lda 		XS_Exponent,x 			; exponent < 0, x by 10
@@ -121,10 +119,9 @@ _FPStripLoop:
 		cmp 		#"0"
 		beq 		_FPStripLoop
 		iny
-		lda 		#0 						; add trailing zero one on
-		sta 		Num_Buffer,y		
+		lda 		#0 
+		sta 		Num_Buffer,y			; add trailing zero one on
 		sty 		NumBufX 				; update position.
 _FPTOExit:		
 		rts
-
 

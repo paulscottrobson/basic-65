@@ -3,7 +3,7 @@
 ;
 ;		Name : 		fpdivide.asm
 ;		Purpose :	Divide B into A (floating point)
-;		Date :		15th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************
@@ -44,11 +44,10 @@ _FPDCalculateExp:
 		bcs 	_FPD_Overflow 				; which can overflow.
 		sta 	XS_Exponent,x
 		;
-		lda 	#0 							; clear result (kept in zLTemp1)
-		sta 	zLTemp1+0
-		sta 	zLTemp1+1
-		sta 	zLTemp1+2
-		sta 	zLTemp1+3
+		stz 	zLTemp1+0					; clear result (kept in zLTemp1)
+		stz 	zLTemp1+1
+		stz 	zLTemp1+2
+		stz 	zLTemp1+3
 		;
 		ldy 	#32 						; times round.
 _FPD_Loop:

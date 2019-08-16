@@ -3,7 +3,7 @@
 ;
 ;		Name : 		fputils.asm
 ;		Purpose :	Floating Point Utilities
-;		Date :		15th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************
@@ -87,8 +87,7 @@ FPUToFloat:
 		and 	#$0F
 		beq 	_FPUFExit
 
-		lda 	#0  						; zero the type byte, making it a float.
-		sta 	XS_Type,x
+		stz 	XS_Type,x					; zero the type byte, making it a float.
 
 		lda 	#128+32 					; and the exponent to 32, makes it * 2^32
 		sta 	XS_Exponent,x 				; x mantissa.
@@ -177,11 +176,10 @@ _FPUToICheckSign:
 		bra 	_FPUTOI_Exit
 		;
 _FPUTOI_Zero:
-		lda 	#0 							; return zero integer.
-		sta 	XS_Mantissa+0,x	
-		sta 	XS_Mantissa+1,x
-		sta 	XS_Mantissa+2,x	
-		sta 	XS_Mantissa+3,x
+		stz 	XS_Mantissa+0,x				; return zero integer.
+		stz 	XS_Mantissa+1,x
+		stz 	XS_Mantissa+2,x	
+		stz 	XS_Mantissa+3,x
 		;
 _FPUToI_Exit:
 		lda 	#1 							; set type to integer
@@ -256,11 +254,10 @@ FPUScale10A:
 		phx 								; save X
 		inx6 								; next slot in expression stack.
 		tay 								; save power scalar in Y.
-		lda 	#0
-		sta 	XS_Mantissa+0,x 			; set slot to 1.0		
-		sta 	XS_Mantissa+1,x
-		sta 	XS_Mantissa+2,x
-		sta 	XS_Type,x
+		stz 	XS_Mantissa+0,x 			; set slot to 1.0		
+		stz 	XS_Mantissa+1,x
+		stz 	XS_Mantissa+2,x
+		stz 	XS_Type,x
 		lda 	#$80
 		sta 	XS_Mantissa+3,x
 		lda 	#$81

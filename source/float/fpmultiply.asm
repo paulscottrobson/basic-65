@@ -3,7 +3,7 @@
 ;
 ;		Name : 		fpmultiply.asm
 ;		Purpose :	Floating Point Multiply
-;		Date :		15th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************
@@ -33,11 +33,10 @@ _FPM_CalcExponent:
 		jsr 	FPCalculateExponent 		; calc exponent of product. (also used by divide)
 		sta 	XS_Exponent,x 				; save the result.
 		;
-		lda 	#0
-		sta 	zLTemp1+0 					; clear the long temp which is upper word of
-		sta 	zLTemp1+1 					; long product. lower word is mantissa-A
-		sta 	zLTemp1+2 					; multiplicand is mantissa-B
-		sta 	zLTemp1+3
+		stz 	zLTemp1+0 					; clear the long temp which is upper word of
+		stz 	zLTemp1+1 					; long product. lower word is mantissa-A
+		stz 	zLTemp1+2 					; multiplicand is mantissa-B
+		stz 	zLTemp1+3
 		;
 		ldy 	#32							; X is loop counter, do it 32 times.
 _FPM_Loop:

@@ -3,7 +3,7 @@
 ;
 ;		Name : 		fpmacros.asm
 ;		Purpose :	Floating Point Macros
-;		Date :		15th August 2019
+;		Date :		16th August 2019
 ;		Author : 	Paul Robson (paul@robsons.org.uk)
 ;
 ; *******************************************************************************************

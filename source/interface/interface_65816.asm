@@ -36,16 +36,14 @@ IF_Reset:
 
 IF_Home:
 		pha
-		lda 	#0	 						; zero X position
-		sta 	IF_XPos 		
+		stz 	IF_XPos 					; zero X position	
 		lda 	#IF_Screen & $FF 			; set r/w pos.
 		sta 	IF_Pos
 		lda 	#(IF_Screen >> 8) & $FF
 		sta 	IF_Pos+1
 		lda 	#IF_Screen >> 16  		
 		sta 	IF_Pos+2
-		lda 	#$00
-		sta 	IF_Pos+3
+		stz 	IF_Pos+3
 		pla
 		rts
 
@@ -57,8 +55,7 @@ IF_Home:
 
 IF_NewLine:
 		pha
-		lda 	#0 							; back to start of line
-		sta 	IF_XPos
+		stz 	IF_XPos						; back to start of line
 		clc 								; down one line
 		lda 	IF_Pos
 		adc 	#64
