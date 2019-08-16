@@ -57,12 +57,12 @@ StartROM:
 
 		jsr 	IF_Reset 					; reset external interface
 		jsr 	IFT_ClearScreen
-		jmp 	TIM_Start
+;		jmp 	TIM_Start
 		jsr 	FPTTest
-;		lda 	#0
-;		sta 	NumBufX
-;		ldx 	#6
-;		jsr 	FPToString
+		lda 	#0
+		sta 	NumBufX
+		ldx 	#6
+		jsr 	FPToString
 		.byte 	$02
 freeze:	bra 	freeze		
 

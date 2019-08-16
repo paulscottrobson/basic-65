@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.54.1900 listing file
 ; 64tass -x -Wall -b -f -L rom.lst -o rom.bin basic.asm
-; Fri Aug 16 16:15:59 2019
+; Fri Aug 16 16:25:03 2019
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -477,7 +477,7 @@
 .c136	68		pla				pla 								; and exit.
 .c137	60		rts				rts
 .c138					_IFSOverflow:
-.c138	20 0e e2	jsr $e20e			jsr 	ERR_Handler
+.c138	20 15 e2	jsr $e215			jsr 	ERR_Handler
 >c13b	43 6f 6e 73 74 61 6e 74				.text 	"Constant overflow",0
 >c143	20 6f 76 65 72 66 6c 6f 77 00
 .c14d					IFSX1ShiftLeft:
@@ -629,7 +629,7 @@
 .c255	68		pla				pla
 .c256	60		rts				rts
 .c257					FP_Overflow:
-.c257	20 0e e2	jsr $e20e			jsr 	ERR_Handler
+.c257	20 15 e2	jsr $e215			jsr 	ERR_Handler
 >c25a	46 6c 6f 61 74 69 6e 67				.text 	"Floating Point overflow",0
 >c262	20 50 6f 69 6e 74 20 6f 76 65 72 66 6c 6f 77 00
 .c272					FPUTimes10:
@@ -944,7 +944,7 @@
 ;******  Processing file: float/fpdivide.asm
 
 .c4ac					FPD_IsDivZero:
-.c4ac	20 0e e2	jsr $e20e			jsr 		ERR_Handler
+.c4ac	20 15 e2	jsr $e215			jsr 		ERR_Handler
 >c4af	44 69 76 69 73 69 6f 6e				.text 		"Division by zero",0
 >c4b7	20 62 79 20 7a 65 72 6f 00
 .c4c0					FPDivide:
@@ -1225,7 +1225,7 @@
 .c679	68		pla				pla
 .c67a	60		rts				rts
 .c67b					_FPFXOverflow:
-.c67b	20 0e e2	jsr $e20e			jsr 	ERR_Handler
+.c67b	20 15 e2	jsr $e215			jsr 	ERR_Handler
 >c67e	45 78 70 6f 6e 65 6e 74				.text 	"Exponent Range",0
 >c686	20 52 61 6e 67 65 00
 
@@ -1670,137 +1670,140 @@
 .e1fd	e2 30		sep #$30			sep 	#$30
 .e1ff	20 00 e0	jsr $e000			jsr 	IF_Reset 					; reset external interface
 .e202	20 55 e0	jsr $e055			jsr 	IFT_ClearScreen
-.e205	4c 89 a0	jmp $a089			jmp 	TIM_Start
-.e208	20 11 e2	jsr $e211			jsr 	FPTTest
->e20b	02						.byte 	$02
-.e20c	80 fe		bra $e20c	freeze:	bra 	freeze
-.e20e					ERR_Handler:
-.e20e	80 fe		bra $e20e			bra 	ERR_Handler
-.e210					NMIHandler:
-.e210	40		rti				rti
+.e205	20 18 e2	jsr $e218			jsr 	FPTTest
+.e208	a9 00		lda #$00			lda 	#0
+.e20a	8d 20 04	sta $0420			sta 	NumBufX
+.e20d	a2 06		ldx #$06			ldx 	#6
+.e20f	20 8d c6	jsr $c68d			jsr 	FPToString
+>e212	02						.byte 	$02
+.e213	80 fe		bra $e213	freeze:	bra 	freeze
+.e215					ERR_Handler:
+.e215	80 fe		bra $e215			bra 	ERR_Handler
+.e217					NMIHandler:
+.e217	40		rti				rti
 
 ;******  Processing file: testing/fptest.asm
 
-.e211					FPTTest:
-.e211	a9 c9		lda #$c9			lda 	#FPTTestData & $FF 			; set zGenPtr to data.
-.e213	85 1a		sta $1a				sta 	zGenPtr
-.e215	a9 e2		lda #$e2			lda 	#FPTTestData >> 8
-.e217	85 1b		sta $1b				sta 	zGenPtr+1
-.e219	a2 00		ldx #$00			ldx 	#0 							; start at stack bottom.
-.e21b	a5 1b		lda $1b		FPTLoop:lda 	zGenPtr+1
-.e21d	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
-.e220	a5 1a		lda $1a				lda 	zGenPtr
-.e222	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
-.e225	a9 2e		lda #$2e			lda 	#"."
-.e227	20 8a e0	jsr $e08a			jsr		IFT_PrintCharacter
-.e22a	20 ba e2	jsr $e2ba			jsr 	FPTGet 						; get next command
-.e22d	c9 00		cmp #$00			cmp 	#0 							; zero, exit
-.e22f	f0 58		beq $e289			beq 	FPTExit
-.e231	c9 01		cmp #$01			cmp 	#1 							; 1,load
-.e233	f0 46		beq $e27b			beq 	FPTLoad
-.e235	c9 2b		cmp #$2b			cmp 	#"+" 						; the -1/0/1 value in AC.
-.e237	d0 0b		bne $e244			bne 	_skip1
-.e239	20 ae e2	jsr $e2ae			jsr 	FPT_Preamble
-.e23c	20 3f c3	jsr $c33f			jsr 	FPAdd
-.e23f	20 b4 e2	jsr $e2b4			jsr 	FPT_Postamble
-.e242	80 d7		bra $e21b			bra 	FPTLoop
-.e244					_skip1:
-.e244	c9 2d		cmp #$2d			cmp 	#"-" 						; the -1/0/1 value in AC.
-.e246	d0 0b		bne $e253			bne 	_skip1
-.e248	20 ae e2	jsr $e2ae			jsr 	FPT_Preamble
-.e24b	20 35 c3	jsr $c335			jsr 	FPSubtract
-.e24e	20 b4 e2	jsr $e2b4			jsr 	FPT_Postamble
-.e251	80 c8		bra $e21b			bra 	FPTLoop
-.e253					_skip1:
-.e253	c9 2a		cmp #$2a			cmp 	#"*" 						; the -1/0/1 value in AC.
-.e255	d0 0b		bne $e262			bne 	_skip1
-.e257	20 ae e2	jsr $e2ae			jsr 	FPT_Preamble
-.e25a	20 0f c4	jsr $c40f			jsr 	FPMultiply
-.e25d	20 b4 e2	jsr $e2b4			jsr 	FPT_Postamble
-.e260	80 b9		bra $e21b			bra 	FPTLoop
-.e262					_skip1:
-.e262	c9 2f		cmp #$2f			cmp 	#"/" 						; the -1/0/1 value in AC.
-.e264	d0 0b		bne $e271			bne 	_skip1
-.e266	20 ae e2	jsr $e2ae			jsr 	FPT_Preamble
-.e269	20 c0 c4	jsr $c4c0			jsr 	FPDivide
-.e26c	20 b4 e2	jsr $e2b4			jsr 	FPT_Postamble
-.e26f	80 aa		bra $e21b			bra 	FPTLoop
-.e271					_skip1:
-.e271	c9 7e		cmp #$7e			cmp 	#"~" 						; ~, compare
-.e273	f0 1a		beq $e28f			beq 	FPTCompare
-.e275	c9 3d		cmp #$3d			cmp 	#"="						; = check equal
-.e277	f0 28		beq $e2a1			beq 	FPTCheck
-.e279					FPTError:
-.e279	80 fe		bra $e279			bra 	FPTError
-.e27b					FPTLoad:
-.e27b	a0 06		ldy #$06			ldy 	#6 							; data to copy
-.e27d					_FPTLoadLoop:
-.e27d	20 ba e2	jsr $e2ba			jsr 	FPTGet
-.e280	9d 00 03	sta $0300,x			sta 	XS_Mantissa,x
-.e283	e8		inx				inx
-.e284	88		dey				dey
-.e285	d0 f6		bne $e27d			bne 	_FPTLoadLoop
-.e287	80 92		bra $e21b			bra 	FPTLoop
-.e289					FPTExit:
-.e289	a9 2a		lda #$2a			lda 	#42
-.e28b	20 8a e0	jsr $e08a			jsr 	IFT_PrintCharacter
-.e28e	60		rts				rts
-.e28f					FPTCompare:
-.e28f	20 ae e2	jsr $e2ae			jsr 	FPT_Preamble
-.e292	20 48 c5	jsr $c548			jsr 	FPCompare
-.e295	20 6d c1	jsr $c16d			jsr 	FPUSetInteger
-.e298	20 ab c1	jsr $c1ab			jsr 	FPUToFloat
-.e29b	20 b4 e2	jsr $e2b4			jsr 	FPT_Postamble
-.e29e	4c 1b e2	jmp $e21b			jmp 	FPTLoop
-.e2a1					FPTCheck:
-.e2a1	20 ae e2	jsr $e2ae			jsr 	FPT_Preamble
-.e2a4	20 48 c5	jsr $c548			jsr 	FPCompare
-.e2a7	09 00		ora #$00			ora 	#0
-.e2a9					_FPTCFail:
-.e2a9	d0 fe		bne $e2a9			bne 	_FPTCFail
-.e2ab	4c 1b e2	jmp $e21b			jmp 	FPTLoop
-.e2ae					FPT_Preamble:
-.e2ae	8a		txa				txa
-.e2af	38		sec				sec
-.e2b0	e9 0c		sbc #$0c			sbc 	#12
-.e2b2	aa		tax				tax
-.e2b3	60		rts				rts
-.e2b4					FPT_Postamble:
-.e2b4	8a		txa				txa
-.e2b5	18		clc				clc
-.e2b6	69 06		adc #$06			adc 	#6
-.e2b8	aa		tax				tax
-.e2b9	60		rts				rts
-.e2ba	5a		phy		FPTGet:	phy
-.e2bb	a0 00		ldy #$00			ldy 	#0
-.e2bd	b1 1a		lda ($1a),y			lda 	(zGenPtr),y
-.e2bf	48		pha				pha
-.e2c0	e6 1a		inc $1a				inc 	zGenPtr
-.e2c2	d0 02		bne $e2c6			bne 	_FPTGet1
-.e2c4	e6 1b		inc $1b				inc 	zGenPtr+1
-.e2c6					_FPTGet1:
-.e2c6	68		pla				pla
-.e2c7	7a		ply				ply
-.e2c8	60		rts				rts
-.e2c9					FPTTestData:
+.e218					FPTTest:
+.e218	a9 d0		lda #$d0			lda 	#FPTTestData & $FF 			; set zGenPtr to data.
+.e21a	85 1a		sta $1a				sta 	zGenPtr
+.e21c	a9 e2		lda #$e2			lda 	#FPTTestData >> 8
+.e21e	85 1b		sta $1b				sta 	zGenPtr+1
+.e220	a2 00		ldx #$00			ldx 	#0 							; start at stack bottom.
+.e222	a5 1b		lda $1b		FPTLoop:lda 	zGenPtr+1
+.e224	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
+.e227	a5 1a		lda $1a				lda 	zGenPtr
+.e229	20 e5 a0	jsr $a0e5			jsr 	TIM_WriteHex
+.e22c	a9 2e		lda #$2e			lda 	#"."
+.e22e	20 8a e0	jsr $e08a			jsr		IFT_PrintCharacter
+.e231	20 c1 e2	jsr $e2c1			jsr 	FPTGet 						; get next command
+.e234	c9 00		cmp #$00			cmp 	#0 							; zero, exit
+.e236	f0 58		beq $e290			beq 	FPTExit
+.e238	c9 01		cmp #$01			cmp 	#1 							; 1,load
+.e23a	f0 46		beq $e282			beq 	FPTLoad
+.e23c	c9 2b		cmp #$2b			cmp 	#"+" 						; the -1/0/1 value in AC.
+.e23e	d0 0b		bne $e24b			bne 	_skip1
+.e240	20 b5 e2	jsr $e2b5			jsr 	FPT_Preamble
+.e243	20 3f c3	jsr $c33f			jsr 	FPAdd
+.e246	20 bb e2	jsr $e2bb			jsr 	FPT_Postamble
+.e249	80 d7		bra $e222			bra 	FPTLoop
+.e24b					_skip1:
+.e24b	c9 2d		cmp #$2d			cmp 	#"-" 						; the -1/0/1 value in AC.
+.e24d	d0 0b		bne $e25a			bne 	_skip1
+.e24f	20 b5 e2	jsr $e2b5			jsr 	FPT_Preamble
+.e252	20 35 c3	jsr $c335			jsr 	FPSubtract
+.e255	20 bb e2	jsr $e2bb			jsr 	FPT_Postamble
+.e258	80 c8		bra $e222			bra 	FPTLoop
+.e25a					_skip1:
+.e25a	c9 2a		cmp #$2a			cmp 	#"*" 						; the -1/0/1 value in AC.
+.e25c	d0 0b		bne $e269			bne 	_skip1
+.e25e	20 b5 e2	jsr $e2b5			jsr 	FPT_Preamble
+.e261	20 0f c4	jsr $c40f			jsr 	FPMultiply
+.e264	20 bb e2	jsr $e2bb			jsr 	FPT_Postamble
+.e267	80 b9		bra $e222			bra 	FPTLoop
+.e269					_skip1:
+.e269	c9 2f		cmp #$2f			cmp 	#"/" 						; the -1/0/1 value in AC.
+.e26b	d0 0b		bne $e278			bne 	_skip1
+.e26d	20 b5 e2	jsr $e2b5			jsr 	FPT_Preamble
+.e270	20 c0 c4	jsr $c4c0			jsr 	FPDivide
+.e273	20 bb e2	jsr $e2bb			jsr 	FPT_Postamble
+.e276	80 aa		bra $e222			bra 	FPTLoop
+.e278					_skip1:
+.e278	c9 7e		cmp #$7e			cmp 	#"~" 						; ~, compare
+.e27a	f0 1a		beq $e296			beq 	FPTCompare
+.e27c	c9 3d		cmp #$3d			cmp 	#"="						; = check equal
+.e27e	f0 28		beq $e2a8			beq 	FPTCheck
+.e280					FPTError:
+.e280	80 fe		bra $e280			bra 	FPTError
+.e282					FPTLoad:
+.e282	a0 06		ldy #$06			ldy 	#6 							; data to copy
+.e284					_FPTLoadLoop:
+.e284	20 c1 e2	jsr $e2c1			jsr 	FPTGet
+.e287	9d 00 03	sta $0300,x			sta 	XS_Mantissa,x
+.e28a	e8		inx				inx
+.e28b	88		dey				dey
+.e28c	d0 f6		bne $e284			bne 	_FPTLoadLoop
+.e28e	80 92		bra $e222			bra 	FPTLoop
+.e290					FPTExit:
+.e290	a9 2a		lda #$2a			lda 	#42
+.e292	20 8a e0	jsr $e08a			jsr 	IFT_PrintCharacter
+.e295	60		rts				rts
+.e296					FPTCompare:
+.e296	20 b5 e2	jsr $e2b5			jsr 	FPT_Preamble
+.e299	20 48 c5	jsr $c548			jsr 	FPCompare
+.e29c	20 6d c1	jsr $c16d			jsr 	FPUSetInteger
+.e29f	20 ab c1	jsr $c1ab			jsr 	FPUToFloat
+.e2a2	20 bb e2	jsr $e2bb			jsr 	FPT_Postamble
+.e2a5	4c 22 e2	jmp $e222			jmp 	FPTLoop
+.e2a8					FPTCheck:
+.e2a8	20 b5 e2	jsr $e2b5			jsr 	FPT_Preamble
+.e2ab	20 48 c5	jsr $c548			jsr 	FPCompare
+.e2ae	09 00		ora #$00			ora 	#0
+.e2b0					_FPTCFail:
+.e2b0	d0 fe		bne $e2b0			bne 	_FPTCFail
+.e2b2	4c 22 e2	jmp $e222			jmp 	FPTLoop
+.e2b5					FPT_Preamble:
+.e2b5	8a		txa				txa
+.e2b6	38		sec				sec
+.e2b7	e9 0c		sbc #$0c			sbc 	#12
+.e2b9	aa		tax				tax
+.e2ba	60		rts				rts
+.e2bb					FPT_Postamble:
+.e2bb	8a		txa				txa
+.e2bc	18		clc				clc
+.e2bd	69 06		adc #$06			adc 	#6
+.e2bf	aa		tax				tax
+.e2c0	60		rts				rts
+.e2c1	5a		phy		FPTGet:	phy
+.e2c2	a0 00		ldy #$00			ldy 	#0
+.e2c4	b1 1a		lda ($1a),y			lda 	(zGenPtr),y
+.e2c6	48		pha				pha
+.e2c7	e6 1a		inc $1a				inc 	zGenPtr
+.e2c9	d0 02		bne $e2cd			bne 	_FPTGet1
+.e2cb	e6 1b		inc $1b				inc 	zGenPtr+1
+.e2cd					_FPTGet1:
+.e2cd	68		pla				pla
+.e2ce	7a		ply				ply
+.e2cf	60		rts				rts
+.e2d0					FPTTestData:
 
 ;******  Processing file: testing/script.inc
 
->e2c9	01					.byte 	1     ; *** Load Float 99.94 ***
->e2ca	ae 47 e1 c7				.dword 	$c7e147ae
->e2ce	87 00					.byte 	$87,$0
->e2d0	01					.byte 	1     ; *** Load Float 0.1 ***
->e2d1	cc cc cc cc				.dword 	$cccccccc
->e2d5	7d 00					.byte 	$7d,$0
->e2d7	00					.byte 	0
+>e2d0	01					.byte 	1     ; *** Load Float 99.94 ***
+>e2d1	ae 47 e1 c7				.dword 	$c7e147ae
+>e2d5	87 00					.byte 	$87,$0
+>e2d7	01					.byte 	1     ; *** Load Float 1370244444.14 ***
+>e2d8	b8 8a 58 a3				.dword 	$a3588ab8
+>e2dc	9f 00					.byte 	$9f,$0
+>e2de	00					.byte 	0
 
 ;******  Return to file: testing/fptest.asm
 
->e2d8	00						.byte 	0
+>e2df	00						.byte 	0
 
 ;******  Return to file: basic.asm
 
->fffa	10 e2						.word	NMIHandler
+>fffa	17 e2						.word	NMIHandler
 >fffc	f0 e1						.word 	StartROM
 >fffe	71 a1						.word 	TIM_BreakVector
 
